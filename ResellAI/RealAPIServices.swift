@@ -1,122 +1,157 @@
 import SwiftUI
 import Foundation
+import PhotosUI
 
 // MARK: - API Configuration
 struct APIConfig {
     static let openAIKey = "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"
     static let spreadsheetID = "1HLNiNBfIqLeIDfNTsEOkl5oPd0McUQGaCaL3cPOobLA"
     static let openAIEndpoint = "https://api.openai.com/v1/chat/completions"
-    // We'll use Google Apps Script for easier integration
-    static let googleAppsScriptURL = "https://script.google.com/macros/s/AKfycbwXYZ123/exec" // You'll need to create this
+    // Replace with your Google Apps Script URL
+    static let googleAppsScriptURL = "https://script.google.com/macros/s/AKfycbztiFfbkCag9QghCX6nTmqI27LgtRSQZPgV4VvJJIMOiepedYlRvRnjhyF0x6i-sS_4Ew/exec"
 }
 
-// MARK: - Enhanced AI Service with Better Prompting
-class AIService: ObservableObject {
+// MARK: - Enhanced AI Service with Multi-Photo Support
+class EnhancedAIService: ObservableObject {
     @Published var apiKey = APIConfig.openAIKey
     @Published var enhancedMode = true
     @Published var isAnalyzing = false
+    @Published var analysisProgress = "Ready"
     
+    // Single photo analysis (backwards compatible)
     func analyzeImage(_ image: UIImage, completion: @escaping (ItemAnalysis) -> Void) {
+        analyzeMultipleImages([image], completion: completion)
+    }
+    
+    // NEW: Multi-photo analysis
+    func analyzeMultipleImages(_ images: [UIImage], completion: @escaping (ItemAnalysis) -> Void) {
         isAnalyzing = true
+        analysisProgress = "Processing \(images.count) photo\(images.count == 1 ? "" : "s")..."
         
-        // Convert image to base64
-        guard let imageData = image.jpegData(compressionQuality: 0.7) else {
-            DispatchQueue.main.async {
-                self.isAnalyzing = false
+        // Convert images to base64
+        var base64Images: [String] = []
+        for image in images {
+            if let imageData = image.jpegData(compressionQuality: 0.8) {
+                base64Images.append(imageData.base64EncodedString())
             }
+        }
+        
+        guard !base64Images.isEmpty else {
+            provideFallbackAnalysis(completion: completion)
             return
         }
         
-        let base64Image = imageData.base64EncodedString()
-        
-        // Enhanced prompt for better accuracy
+        // ENHANCED MULTI-PHOTO PROMPT
         let prompt = """
-        You are an expert eBay reseller and item identification specialist. Analyze this image carefully and identify the EXACT item shown.
+        You are an expert eBay reseller analyzing \(images.count) photo\(images.count == 1 ? "" : "s") of an item. Provide the most accurate identification and pricing possible.
 
-        CRITICAL INSTRUCTIONS:
-        - Look carefully at ALL visible text, logos, brand names, model numbers
-        - If you see product packaging, read the package text
-        - Don't guess or make assumptions - only identify what you can clearly see
-        - Focus on resale value and eBay potential
-        - Consider item condition from the photo
-
-        IDENTIFY:
-        1. EXACT item name (be specific - include model numbers, sizes, variations)
-        2. Brand name (look for logos, text, markings)
-        3. Category for eBay listing
-        4. Realistic current market value (check your knowledge of recent sold prices)
-        5. eBay title optimized for search (80 chars max)
-        6. Professional description for listing
-        7. Search keywords buyers would use
-        8. Condition assessment from photo
-        9. Resale potential (1-10, considering demand/competition)
-
-        EXAMPLES OF GOOD IDENTIFICATION:
-        - "Coca-Cola Classic 12oz Aluminum Can" NOT "Air Max 90"
-        - "Vintage 1990s Nike Air Jordan 1 Red/Black Size 10" NOT "sneaker"
-        - "Apple iPhone 13 Pro 128GB Unlocked" NOT "phone"
-
+        🎯 MULTI-PHOTO ANALYSIS STRATEGY:
+        \(images.count > 1 ? """
+        - Photo 1: Overall item identification and condition assessment
+        - Additional Photos: Look for tags, labels, model numbers, serial numbers, authenticity markers
+        - Cross-reference details between photos for maximum accuracy
+        """ : "- Analyze this single photo for all available details")
+        
+        📍 CRITICAL IDENTIFICATION REQUIREMENTS:
+        - Read ALL visible text completely (brand names, model numbers, SKUs, size tags)
+        - Identify exact model/style codes, UPC codes, serial numbers if visible
+        - Determine specific colorways, sizes, editions, production years
+        - Look for authenticity markers (holograms, tags, fonts, stitching patterns)
+        - Assess condition impact on value (wear, damage, completeness)
+        
+        💰 PRICING INTELLIGENCE:
+        - Base prices on recent eBay sold listings knowledge (last 30 days)
+        - Consider condition impact (New vs Used pricing difference)
+        - Factor in rarity, demand trends, seasonal considerations
+        - Include authentication premiums for luxury/collectible items
+        - Account for regional market variations
+        
+        🎯 EXCELLENCE EXAMPLES:
+        ❌ "Nike Shoes" → ✅ "Nike Air Jordan 1 Retro High OG 'Chicago' 2015 555088-101 Size 10.5"
+        ❌ "Designer Bag" → ✅ "Louis Vuitton Neverfull MM Damier Ebene N51105 Date Code VI4129"
+        ❌ "Vintage Shirt" → ✅ "1990s Metallica Master of Puppets Tour T-Shirt XL Single Stitch USA"
+        
         Respond ONLY in this JSON format:
         {
-            "itemName": "exact specific item name with details",
+            "itemName": "exact specific identification with model/details",
             "brand": "brand name if visible",
-            "category": "specific eBay category",
+            "modelNumber": "specific model/SKU/style code found",
+            "category": "precise eBay category path",
             "suggestedPrice": 0.00,
+            "priceRange": {"low": 0.00, "high": 0.00, "average": 0.00},
             "confidence": 0.95,
-            "ebayTitle": "optimized title with keywords",
-            "description": "detailed professional description",
-            "keywords": ["keyword1", "keyword2", "keyword3"],
-            "condition": "New/Like New/Good/Fair/Poor",
+            "ebayTitle": "optimized 80-char SEO title with key terms",
+            "description": "detailed professional description with measurements/flaws",
+            "keywords": ["primary", "secondary", "brand", "model", "size", "color"],
+            "condition": "New/Like New/Excellent/Good/Fair/Poor",
             "resalePotential": 8,
-            "marketNotes": "why this price/demand insights"
+            "marketNotes": "recent market trends and timing insights",
+            "authenticationNotes": "authenticity markers observed or concerns",
+            "shippingNotes": "size/weight/fragility considerations",
+            "competitionLevel": "Low/Medium/High",
+            "seasonalDemand": "optimal selling timing and seasonal factors",
+            "photosAnalyzed": \(images.count)
         }
         """
         
-        // Create request payload
+        analysisProgress = "Connecting to AI..."
+        
+        // Create multi-image payload
+        var imageContent: [[String: Any]] = []
+        
+        // Add text prompt
+        imageContent.append([
+            "type": "text",
+            "text": prompt
+        ])
+        
+        // Add all images
+        for base64Image in base64Images {
+            imageContent.append([
+                "type": "image_url",
+                "image_url": [
+                    "url": "data:image/jpeg;base64,\(base64Image)",
+                    "detail": "high"
+                ]
+            ])
+        }
+        
         let payload: [String: Any] = [
             "model": "gpt-4o",
             "messages": [
                 [
+                    "role": "system",
+                    "content": "You are an expert eBay reseller with perfect knowledge of current market values, authentication, and pricing trends."
+                ],
+                [
                     "role": "user",
-                    "content": [
-                        [
-                            "type": "text",
-                            "text": prompt
-                        ],
-                        [
-                            "type": "image_url",
-                            "image_url": [
-                                "url": "data:image/jpeg;base64,\(base64Image)",
-                                "detail": "high"
-                            ]
-                        ]
-                    ]
+                    "content": imageContent
                 ]
             ],
-            "max_tokens": 1000,
-            "temperature": 0.1  // Lower temperature for more consistent identification
+            "max_tokens": 1500,
+            "temperature": 0.05 // Ultra-low for consistency
         ]
         
-        // Make API request
+        analysisProgress = "AI analyzing photos..."
+        
         var request = URLRequest(url: URL(string: APIConfig.openAIEndpoint)!)
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30
         
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         } catch {
-            print("❌ Error creating request body: \(error)")
-            DispatchQueue.main.async {
-                self.isAnalyzing = false
-            }
+            print("❌ Error creating request: \(error)")
+            provideFallbackAnalysis(completion: completion)
             return
         }
         
-        // Send request
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.isAnalyzing = false
+                self?.analysisProgress = "Ready"
             }
             
             if let error = error {
@@ -131,81 +166,91 @@ class AIService: ObservableObject {
                 return
             }
             
-            // Debug: Print raw response
-            if let responseString = String(data: data, encoding: .utf8) {
-                print("📡 OpenAI Response: \(responseString.prefix(500))")
-            }
-            
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let choices = json["choices"] as? [[String: Any]],
-                   let firstChoice = choices.first,
-                   let message = firstChoice["message"] as? [String: Any],
-                   let content = message["content"] as? String {
-                    
-                    print("🤖 AI Content: \(content)")
-                    
-                    // Clean the JSON content (remove markdown if present)
-                    var cleanContent = content
-                    if content.contains("```json") {
-                        cleanContent = content
-                            .replacingOccurrences(of: "```json", with: "")
-                            .replacingOccurrences(of: "```", with: "")
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
-                    }
-                    
-                    // Parse the JSON response from GPT
-                    if let jsonData = cleanContent.data(using: .utf8),
-                       let itemData = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
-                        
-                        let analysis = ItemAnalysis(
-                            itemName: itemData["itemName"] as? String ?? "Unknown Item",
-                            category: itemData["category"] as? String ?? "Other",
-                            suggestedPrice: itemData["suggestedPrice"] as? Double ?? 10.0,
-                            confidence: itemData["confidence"] as? Double ?? 0.5,
-                            ebayTitle: itemData["ebayTitle"] as? String ?? "Item for Sale",
-                            description: itemData["description"] as? String ?? "Item in good condition",
-                            keywords: itemData["keywords"] as? [String] ?? ["item"],
-                            condition: itemData["condition"] as? String ?? "Good",
-                            resalePotential: itemData["resalePotential"] as? Int ?? 5,
-                            marketNotes: itemData["marketNotes"] as? String ?? ""
-                        )
-                        
-                        print("✅ Successfully parsed AI analysis: \(analysis.itemName)")
-                        
-                        DispatchQueue.main.async {
-                            completion(analysis)
-                        }
-                    } else {
-                        print("❌ Failed to parse JSON response")
-                        print("Raw content: \(cleanContent)")
-                        self?.parseTextResponse(cleanContent, completion: completion)
-                    }
-                } else {
-                    print("❌ Unexpected API response structure")
-                    self?.provideFallbackAnalysis(completion: completion)
-                }
-            } catch {
-                print("❌ Error parsing response: \(error)")
-                print("Raw response: \(String(data: data, encoding: .utf8) ?? "No data")")
-                self?.provideFallbackAnalysis(completion: completion)
-            }
+            self?.parseEnhancedResponse(data, photosCount: images.count, completion: completion)
         }.resume()
     }
     
-    private func parseTextResponse(_ text: String, completion: @escaping (ItemAnalysis) -> Void) {
-        print("🔧 Using text parsing fallback")
-        let analysis = ItemAnalysis(
-            itemName: "AI Analyzed Item",
-            category: "General",
-            suggestedPrice: 20.0,
+    private func parseEnhancedResponse(_ data: Data, photosCount: Int, completion: @escaping (ItemAnalysis) -> Void) {
+        do {
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let choices = json["choices"] as? [[String: Any]],
+               let firstChoice = choices.first,
+               let message = firstChoice["message"] as? [String: Any],
+               let content = message["content"] as? String {
+                
+                print("🤖 Enhanced AI Response: \(content.prefix(500))...")
+                
+                // Clean JSON content
+                var cleanContent = content
+                if content.contains("```json") {
+                    cleanContent = content
+                        .replacingOccurrences(of: "```json", with: "")
+                        .replacingOccurrences(of: "```", with: "")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                
+                if let jsonData = cleanContent.data(using: .utf8),
+                   let itemData = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+                    
+                    // Extract price range
+                    var priceRange = PriceRange()
+                    if let range = itemData["priceRange"] as? [String: Any] {
+                        priceRange.low = range["low"] as? Double ?? 0
+                        priceRange.high = range["high"] as? Double ?? 0
+                        priceRange.average = range["average"] as? Double ?? 0
+                    }
+                    
+                    let analysis = EnhancedItemAnalysis(
+                        itemName: itemData["itemName"] as? String ?? "Unknown Item",
+                        category: itemData["category"] as? String ?? "Other",
+                        modelNumber: itemData["modelNumber"] as? String ?? "",
+                        suggestedPrice: itemData["suggestedPrice"] as? Double ?? 10.0,
+                        priceRange: priceRange,
+                        confidence: itemData["confidence"] as? Double ?? 0.5,
+                        ebayTitle: itemData["ebayTitle"] as? String ?? "Item for Sale",
+                        description: itemData["description"] as? String ?? "Item in good condition",
+                        keywords: itemData["keywords"] as? [String] ?? ["item"],
+                        condition: itemData["condition"] as? String ?? "Good",
+                        resalePotential: itemData["resalePotential"] as? Int ?? 5,
+                        marketNotes: itemData["marketNotes"] as? String ?? "",
+                        authenticationNotes: itemData["authenticationNotes"] as? String ?? "",
+                        shippingNotes: itemData["shippingNotes"] as? String ?? "",
+                        competitionLevel: itemData["competitionLevel"] as? String ?? "Medium",
+                        seasonalDemand: itemData["seasonalDemand"] as? String ?? "",
+                        photosAnalyzed: itemData["photosAnalyzed"] as? Int ?? photosCount
+                    )
+                    
+                    print("✅ Enhanced analysis complete: \(analysis.itemName)")
+                    
+                    DispatchQueue.main.async {
+                        completion(analysis)
+                    }
+                } else {
+                    print("❌ Failed to parse enhanced JSON")
+                    self.parseBasicResponse(cleanContent, completion: completion)
+                }
+            } else {
+                print("❌ Unexpected API response structure")
+                self.provideFallbackAnalysis(completion: completion)
+            }
+        } catch {
+            print("❌ Error parsing enhanced response: \(error)")
+            self.provideFallbackAnalysis(completion: completion)
+        }
+    }
+    
+    private func parseBasicResponse(_ content: String, completion: @escaping (ItemAnalysis) -> Void) {
+        let analysis = BasicItemAnalysis(
+            itemName: extractBasicInfo(from: content, key: "itemName") ?? "AI Analyzed Item",
+            category: extractBasicInfo(from: content, key: "category") ?? "General",
+            suggestedPrice: Double(extractBasicInfo(from: content, key: "suggestedPrice") ?? "20") ?? 20.0,
             confidence: 0.7,
-            ebayTitle: "Item Analyzed by AI - See Description",
-            description: text,
+            ebayTitle: extractBasicInfo(from: content, key: "ebayTitle") ?? "Item for Sale",
+            description: content,
             keywords: ["analyzed", "item", "resale"],
-            condition: "Good",
+            condition: extractBasicInfo(from: content, key: "condition") ?? "Good",
             resalePotential: 6,
-            marketNotes: "Text analysis completed"
+            marketNotes: "Basic analysis completed"
         )
         
         DispatchQueue.main.async {
@@ -213,73 +258,70 @@ class AIService: ObservableObject {
         }
     }
     
+    private func extractBasicInfo(from text: String, key: String) -> String? {
+        let pattern = "\"\(key)\":\\s*\"([^\"]*)\""
+        let regex = try? NSRegularExpression(pattern: pattern)
+        let range = NSRange(text.startIndex..., in: text)
+        
+        if let match = regex?.firstMatch(in: text, range: range),
+           let valueRange = Range(match.range(at: 1), in: text) {
+            return String(text[valueRange])
+        }
+        return nil
+    }
+    
     private func provideFallbackAnalysis(completion: @escaping (ItemAnalysis) -> Void) {
-        print("🆘 Using fallback analysis")
         DispatchQueue.main.async {
-            let fallback = ItemAnalysis(
+            let fallback = BasicItemAnalysis(
                 itemName: "Unidentified Item",
                 category: "Other",
                 suggestedPrice: 15.0,
                 confidence: 0.3,
                 ebayTitle: "Item for Sale - See Photos",
-                description: "Please see photos for condition and details. Fast shipping with tracking included.",
-                keywords: ["item", "sale", "deal"],
+                description: "Please see photos for condition and details. Research recommended for accurate pricing.",
+                keywords: ["item", "sale", "resale"],
                 condition: "Good",
                 resalePotential: 5,
-                marketNotes: "Unable to analyze - manual research recommended"
+                marketNotes: "Manual analysis recommended"
             )
             completion(fallback)
         }
     }
 }
 
-// MARK: - Enhanced Item Analysis Model
-struct ItemAnalysis {
-    let itemName: String
-    let category: String
-    let suggestedPrice: Double
-    let confidence: Double
-    let ebayTitle: String
-    let description: String
-    let keywords: [String]
-    let condition: String
-    let resalePotential: Int
-    let marketNotes: String
-}
-
-// MARK: - REAL Google Sheets Integration
-class GoogleSheetsService: ObservableObject {
+// MARK: - Enhanced Google Sheets Service (Fixed)
+class EnhancedGoogleSheetsService: ObservableObject {
     @Published var spreadsheetId = APIConfig.spreadsheetID
     @Published var isConnected = false
     @Published var isSyncing = false
     @Published var lastSyncDate: Date?
     @Published var syncStatus = "Ready"
-    
-    private let sheetsAPIKey = "AIzaSyBDpZ5P5ewp6HCw7S8Grpg5O1ZQ9MUYxuQ" // You'll need to get this from Google Cloud Console
+    @Published var appsScriptURL = APIConfig.googleAppsScriptURL
     
     func authenticate() {
-        print("🔐 Authenticating with Google Sheets...")
-        // Simulate authentication - in production you'd do OAuth
+        print("🔐 Setting up Google Apps Script connection...")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            self.isConnected = true
-            self.syncStatus = "Connected"
-            print("✅ Google Sheets authentication successful")
+            self.isConnected = !self.appsScriptURL.contains("YOUR_APPS_SCRIPT_URL_HERE")
+            self.syncStatus = self.isConnected ? "Connected" : "Setup Required"
+            print(self.isConnected ? "✅ Apps Script ready" : "⚠️ Apps Script URL needed")
         }
     }
     
     func testConnection() {
-        print("🧪 Testing Google Sheets connection...")
+        guard !appsScriptURL.contains("YOUR_APPS_SCRIPT_URL_HERE") else {
+            syncStatus = "Apps Script URL not configured"
+            isConnected = false
+            return
+        }
+        
+        print("🧪 Testing Google Apps Script connection...")
         isSyncing = true
         syncStatus = "Testing..."
         
-        // Test by trying to read the spreadsheet info
-        let testURL = "https://sheets.googleapis.com/v4/spreadsheets/\(spreadsheetId)?key=\(sheetsAPIKey)"
-        
-        guard let url = URL(string: testURL) else {
-            print("❌ Invalid URL")
+        guard let url = URL(string: appsScriptURL) else {
             DispatchQueue.main.async {
                 self.isSyncing = false
-                self.syncStatus = "Error: Invalid URL"
+                self.syncStatus = "Invalid URL"
                 self.isConnected = false
             }
             return
@@ -298,7 +340,7 @@ class GoogleSheetsService: ObservableObject {
                 
                 if let httpResponse = response as? HTTPURLResponse {
                     if httpResponse.statusCode == 200 {
-                        print("✅ Google Sheets connection successful!")
+                        print("✅ Google Apps Script connection successful!")
                         self?.syncStatus = "Connected"
                         self?.isConnected = true
                     } else {
@@ -312,51 +354,86 @@ class GoogleSheetsService: ObservableObject {
     }
     
     func uploadItem(_ item: InventoryItem) {
-        guard !spreadsheetId.isEmpty else {
-            print("❌ No spreadsheet ID configured")
+        guard !appsScriptURL.contains("YOUR_APPS_SCRIPT_URL_HERE") else {
+            print("⚠️ Google Apps Script URL not configured")
             return
         }
         
-        print("📤 Uploading item to Google Sheets: \(item.name)")
+        print("📤 Uploading to Google Sheets: \(item.name)")
         isSyncing = true
         syncStatus = "Uploading..."
         
-        // Prepare the data row
-        let row = [
-            "\(item.itemNumber)", // A: Item#
-            item.name,            // B: Name
-            item.source,          // C: Source
-            "\(item.purchasePrice)", // D: Cost
-            "\(item.suggestedPrice)", // E: Suggested$
-            item.status.rawValue, // F: Status
-            "\(item.estimatedProfit)", // G: Profit
-            "\(item.estimatedROI)", // H: ROI%
-            formatDate(item.dateAdded), // I: Date
-            item.title,           // J: Title
-            item.description,     // K: Description
-            item.keywords.joined(separator: ", "), // L: Keywords
-            item.condition,       // M: Condition
-            item.category         // N: Category
+        let itemData: [String: Any] = [
+            "itemNumber": item.itemNumber,
+            "name": item.name,
+            "source": item.source,
+            "purchasePrice": item.purchasePrice,
+            "suggestedPrice": item.suggestedPrice,
+            "status": item.status.rawValue,
+            "profit": item.estimatedProfit,
+            "roi": item.estimatedROI,
+            "date": formatDate(item.dateAdded),
+            "title": item.title,
+            "description": item.description,
+            "keywords": item.keywords.joined(separator: ", "),
+            "condition": item.condition,
+            "category": item.category
         ]
         
-        // Real Google Sheets API call
-        appendRowToSheet(row: row) { [weak self] success in
+        guard let url = URL(string: appsScriptURL) else {
+            DispatchQueue.main.async {
+                self.isSyncing = false
+                self.syncStatus = "Invalid URL"
+            }
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: itemData)
+        } catch {
+            print("❌ Error creating request: \(error)")
+            DispatchQueue.main.async {
+                self.isSyncing = false
+                self.syncStatus = "Request Error"
+            }
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.isSyncing = false
-                if success {
-                    print("✅ Item uploaded to Google Sheets: \(item.name)")
-                    self?.syncStatus = "Synced"
-                    self?.lastSyncDate = Date()
-                } else {
-                    print("❌ Failed to upload item to Google Sheets")
+                
+                if let error = error {
+                    print("❌ Upload failed: \(error)")
                     self?.syncStatus = "Upload Failed"
+                    return
+                }
+                
+                if let data = data,
+                   let responseString = String(data: data, encoding: .utf8) {
+                    print("📊 Apps Script Response: \(responseString)")
+                    
+                    if responseString.contains("success") {
+                        print("✅ Item uploaded successfully: \(item.name)")
+                        self?.syncStatus = "Synced"
+                        self?.lastSyncDate = Date()
+                        self?.isConnected = true
+                    } else {
+                        print("❌ Upload failed")
+                        self?.syncStatus = "Upload Failed"
+                    }
+                } else {
+                    self?.syncStatus = "No Response"
                 }
             }
-        }
+        }.resume()
     }
     
     func updateItem(_ item: InventoryItem) {
-        // For now, append as new row (you could implement row updates later)
         uploadItem(item)
     }
     
@@ -365,16 +442,14 @@ class GoogleSheetsService: ObservableObject {
         
         isSyncing = true
         syncStatus = "Syncing \(items.count) items..."
-        print("📊 Syncing \(items.count) items to Google Sheets...")
         
         let group = DispatchGroup()
         var successCount = 0
         
-        for item in items {
+        for (index, item) in items.enumerated() {
             group.enter()
             
-            // Small delay between uploads to avoid rate limiting
-            DispatchQueue.global().asyncAfter(deadline: .now() + Double.random(in: 0.1...0.5)) {
+            DispatchQueue.global().asyncAfter(deadline: .now() + Double(index) * 0.5) {
                 self.uploadItemSilent(item) { success in
                     if success { successCount += 1 }
                     group.leave()
@@ -391,66 +466,44 @@ class GoogleSheetsService: ObservableObject {
     }
     
     private func uploadItemSilent(_ item: InventoryItem, completion: @escaping (Bool) -> Void) {
-        let row = [
-            "\(item.itemNumber)", item.name, item.source, "\(item.purchasePrice)",
-            "\(item.suggestedPrice)", item.status.rawValue, "\(item.estimatedProfit)",
-            "\(item.estimatedROI)", formatDate(item.dateAdded), item.title,
-            item.description, item.keywords.joined(separator: ", "), item.condition, item.category
+        let itemData: [String: Any] = [
+            "itemNumber": item.itemNumber,
+            "name": item.name,
+            "source": item.source,
+            "purchasePrice": item.purchasePrice,
+            "suggestedPrice": item.suggestedPrice,
+            "status": item.status.rawValue,
+            "profit": item.estimatedProfit,
+            "roi": item.estimatedROI,
+            "date": formatDate(item.dateAdded),
+            "title": item.title,
+            "description": item.description,
+            "keywords": item.keywords.joined(separator: ", "),
+            "condition": item.condition,
+            "category": item.category
         ]
         
-        appendRowToSheet(row: row, completion: completion)
-    }
-    
-    private func appendRowToSheet(row: [String], completion: @escaping (Bool) -> Void) {
-        // Google Sheets API v4 - Append values
-        let range = "Sheet1!A:N" // Covers all our columns
-        let urlString = "https://sheets.googleapis.com/v4/spreadsheets/\(spreadsheetId)/values/\(range):append?valueInputOption=RAW&key=\(sheetsAPIKey)"
-        
-        guard let url = URL(string: urlString) else {
-            print("❌ Invalid Google Sheets URL")
+        guard let url = URL(string: appsScriptURL) else {
             completion(false)
             return
         }
-        
-        let requestBody: [String: Any] = [
-            "values": [row]
-        ]
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+            request.httpBody = try JSONSerialization.data(withJSONObject: itemData)
         } catch {
-            print("❌ Error creating request body: \(error)")
             completion(false)
             return
         }
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("❌ Google Sheets API Error: \(error)")
-                completion(false)
-                return
-            }
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("📊 Google Sheets Response Code: \(httpResponse.statusCode)")
-                
-                if httpResponse.statusCode == 200 {
-                    if let data = data,
-                       let responseString = String(data: data, encoding: .utf8) {
-                        print("✅ Google Sheets Success: \(responseString)")
-                    }
-                    completion(true)
-                } else {
-                    if let data = data,
-                       let errorString = String(data: data, encoding: .utf8) {
-                        print("❌ Google Sheets Error: \(errorString)")
-                    }
-                    completion(false)
-                }
+            if let data = data,
+               let responseString = String(data: data, encoding: .utf8),
+               responseString.contains("success") {
+                completion(true)
             } else {
                 completion(false)
             }
@@ -464,264 +517,55 @@ class GoogleSheetsService: ObservableObject {
     }
     
     func setupGoogleSheetsHeaders() {
-        print("📋 Setting up Google Sheets headers...")
-        let headers = [
-            "Item#", "Name", "Source", "Cost", "Suggested$", "Status",
-            "Profit", "ROI%", "Date", "Title", "Description", "Keywords", "Condition", "Category"
-        ]
-        
-        // This would normally check if headers exist and add them if not
-        // For now, just print what the headers should be
-        print("📊 Required headers: \(headers.joined(separator: " | "))")
-        print("🔗 Make sure your Google Sheet has these headers in row 1")
-        print("📝 Sheet URL: https://docs.google.com/spreadsheets/d/\(spreadsheetId)/edit")
+        print("📋 Google Apps Script Setup Instructions:")
+        print("1. Go to script.google.com")
+        print("2. Create new project")
+        print("3. Replace Code.gs with the provided script")
+        print("4. Deploy as Web App (Execute as: Me, Access: Anyone)")
+        print("5. Copy the deployment URL and update APIConfig.googleAppsScriptURL")
+        print("📊 Sheet URL: https://docs.google.com/spreadsheets/d/\(spreadsheetId)/edit")
     }
 }
 
-// MARK: - Enhanced Settings View
-struct EnhancedSettingsView: View {
-    @EnvironmentObject var aiService: AIService
-    @EnvironmentObject var googleSheetsService: GoogleSheetsService
-    @State private var showingAPIStatus = false
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                Section("🤖 AI Configuration") {
-                    HStack {
-                        Image(systemName: "brain.head.profile")
-                            .foregroundColor(.blue)
-                        VStack(alignment: .leading) {
-                            Text("OpenAI GPT-4 Vision")
-                                .fontWeight(.semibold)
-                            Text("Built-in API key configured")
-                                .font(.caption)
-                                .foregroundColor(.green)
-                        }
-                        Spacer()
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                    }
-                    
-                    Toggle("Enhanced Analysis", isOn: $aiService.enhancedMode)
-                    
-                    Button("Test AI Analysis") {
-                        print("🧪 Testing AI connection...")
-                    }
-                }
-                
-                Section("📊 Google Sheets Integration") {
-                    HStack {
-                        Image(systemName: "tablecells")
-                            .foregroundColor(.green)
-                        VStack(alignment: .leading) {
-                            Text("Spreadsheet Status")
-                                .fontWeight(.semibold)
-                            Text(googleSheetsService.syncStatus)
-                                .font(.caption)
-                                .foregroundColor(googleSheetsService.isConnected ? .green : .orange)
-                        }
-                        Spacer()
-                        if googleSheetsService.isSyncing {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        } else {
-                            Image(systemName: googleSheetsService.isConnected ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                                .foregroundColor(googleSheetsService.isConnected ? .green : .orange)
-                        }
-                    }
-                    
-                    if let lastSync = googleSheetsService.lastSyncDate {
-                        Text("Last sync: \(lastSync, formatter: dateFormatter)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Button("Setup Headers") {
-                        googleSheetsService.setupGoogleSheetsHeaders()
-                    }
-                    
-                    Button("Test Connection") {
-                        googleSheetsService.testConnection()
-                    }
-                    
-                    Button("Open Spreadsheet") {
-                        openGoogleSheet()
-                    }
-                }
-                
-                Section("⚡ Business Settings") {
-                    HStack {
-                        Text("ROI Target")
-                        Spacer()
-                        Text("300%+")
-                            .foregroundColor(.green)
-                            .fontWeight(.semibold)
-                    }
-                    
-                    HStack {
-                        Text("Auto-sync Items")
-                        Spacer()
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                    }
-                    
-                    HStack {
-                        Text("AI Accuracy Mode")
-                        Spacer()
-                        Text("Enhanced")
-                            .foregroundColor(.blue)
-                    }
-                }
-                
-                Section("🔧 Tools") {
-                    Button("View API Status") {
-                        showingAPIStatus = true
-                    }
-                    
-                    Button("Force Sync All Items") {
-                        // Implementation in main view
-                        print("🔄 Force syncing all items...")
-                    }
-                    
-                    Button("Setup Instructions") {
-                        showSetupInstructions()
-                    }
-                }
-                
-                Section("⚠️ Developer") {
-                    Button("Clear Cache") {
-                        print("🧹 Clearing cache...")
-                    }
-                    .foregroundColor(.orange)
-                }
-            }
-            .navigationTitle("Settings")
-        }
-        .sheet(isPresented: $showingAPIStatus) {
-            APIStatusView()
-                .environmentObject(aiService)
-                .environmentObject(googleSheetsService)
-        }
-    }
-    
-    private var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        return formatter
-    }
-    
-    private func openGoogleSheet() {
-        let url = "https://docs.google.com/spreadsheets/d/\(googleSheetsService.spreadsheetId)/edit"
-        if let sheetURL = URL(string: url) {
-            UIApplication.shared.open(sheetURL)
-        }
-    }
-    
-    private func showSetupInstructions() {
-        print("📋 Setup Instructions:")
-        print("1. Google Sheets API key needed")
-        print("2. Make sure spreadsheet is publicly editable")
-        print("3. Headers should be set up in row 1")
-    }
-}
-
-// MARK: - API Status View
-struct APIStatusView: View {
-    @EnvironmentObject var aiService: AIService
-    @EnvironmentObject var googleSheetsService: GoogleSheetsService
+// MARK: - Multi Photo Picker
+struct MultiPhotoPicker: UIViewControllerRepresentable {
+    @Binding var selectedImages: [UIImage]
     @Environment(\.presentationMode) var presentationMode
     
-    var body: some View {
-        NavigationView {
-            List {
-                Section("🤖 OpenAI Status") {
-                    StatusRow(
-                        title: "API Key",
-                        status: !aiService.apiKey.isEmpty,
-                        detail: "Built-in key configured"
-                    )
-                    
-                    StatusRow(
-                        title: "Vision Model",
-                        status: true,
-                        detail: "GPT-4O Vision ready"
-                    )
-                    
-                    StatusRow(
-                        title: "Enhanced Mode",
-                        status: aiService.enhancedMode,
-                        detail: aiService.enhancedMode ? "Enabled" : "Disabled"
-                    )
-                }
-                
-                Section("📊 Google Sheets Status") {
-                    StatusRow(
-                        title: "Spreadsheet ID",
-                        status: !googleSheetsService.spreadsheetId.isEmpty,
-                        detail: googleSheetsService.spreadsheetId.isEmpty ? "Not configured" : "Configured"
-                    )
-                    
-                    StatusRow(
-                        title: "Connection",
-                        status: googleSheetsService.isConnected,
-                        detail: googleSheetsService.syncStatus
-                    )
-                    
-                    StatusRow(
-                        title: "Sync Status",
-                        status: !googleSheetsService.isSyncing,
-                        detail: googleSheetsService.isSyncing ? "Syncing..." : "Ready"
-                    )
-                }
-                
-                Section("📱 App Status") {
-                    StatusRow(
-                        title: "Camera Access",
-                        status: true,
-                        detail: "Granted"
-                    )
-                    
-                    StatusRow(
-                        title: "Storage",
-                        status: true,
-                        detail: "Available"
-                    )
-                    
-                    StatusRow(
-                        title: "Network",
-                        status: true,
-                        detail: "Connected"
-                    )
-                }
-                
-                Section("🔧 Required Setup") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("To complete Google Sheets integration:")
-                            .fontWeight(.semibold)
-                        
-                        Text("1. Get Google Sheets API key from Google Cloud Console")
-                            .font(.caption)
-                        
-                        Text("2. Enable Google Sheets API")
-                            .font(.caption)
-                        
-                        Text("3. Add API key to app code")
-                            .font(.caption)
-                        
-                        Text("4. Make sure spreadsheet is editable")
-                            .font(.caption)
-                    }
-                    .padding(.vertical, 4)
-                }
-            }
-            .navigationTitle("API Status")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        presentationMode.wrappedValue.dismiss()
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var config = PHPickerConfiguration()
+        config.filter = .images
+        config.selectionLimit = 5 // Allow up to 5 photos
+        
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        let parent: MultiPhotoPicker
+        
+        init(_ parent: MultiPhotoPicker) {
+            self.parent = parent
+        }
+        
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
+            
+            for result in results {
+                if result.itemProvider.canLoadObject(ofClass: UIImage.self) {
+                    result.itemProvider.loadObject(ofClass: UIImage.self) { image, _ in
+                        DispatchQueue.main.async {
+                            if let uiImage = image as? UIImage {
+                                self.parent.selectedImages.append(uiImage)
+                            }
+                        }
                     }
                 }
             }
@@ -729,25 +573,46 @@ struct APIStatusView: View {
     }
 }
 
-struct StatusRow: View {
-    let title: String
-    let status: Bool
-    let detail: String
+// MARK: - Photo Picker Helper (Single Photo)
+struct PhotoPicker: UIViewControllerRepresentable {
+    @Binding var selectedImage: UIImage?
+    @Environment(\.presentationMode) var presentationMode
     
-    var body: some View {
-        HStack {
-            Image(systemName: status ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .foregroundColor(status ? .green : .orange)
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var config = PHPickerConfiguration()
+        config.filter = .images
+        config.selectionLimit = 1
+        
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        let parent: PhotoPicker
+        
+        init(_ parent: PhotoPicker) {
+            self.parent = parent
+        }
+        
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
             
-            VStack(alignment: .leading) {
-                Text(title)
-                    .fontWeight(.medium)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            guard let provider = results.first?.itemProvider else { return }
+            
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                provider.loadObject(ofClass: UIImage.self) { image, _ in
+                    DispatchQueue.main.async {
+                        self.parent.selectedImage = image as? UIImage
+                    }
+                }
             }
-            
-            Spacer()
         }
     }
 }
