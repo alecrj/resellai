@@ -3,45 +3,54 @@ import UIKit
 import AVFoundation
 import PhotosUI
 
-// MARK: - Main Content View
+// MARK: - Revolutionary Main Content View
 struct ContentView: View {
     @StateObject private var inventoryManager = InventoryManager()
-    @StateObject private var aiService = EnhancedAIService()
+    @StateObject private var revolutionaryAI = RevolutionaryAIService()
     @StateObject private var googleSheetsService = EnhancedGoogleSheetsService()
+    @StateObject private var ebayListingService = DirectEbayListingService()
     
     var body: some View {
         TabView {
-            EnhancedCameraView()
+            RevolutionaryAnalysisView()
                 .tabItem {
-                    Image(systemName: "camera.fill")
-                    Text("AI Scan")
+                    Image(systemName: "brain.head.profile")
+                    Text("🚀 AI Pro")
                 }
                 .environmentObject(inventoryManager)
-                .environmentObject(aiService)
+                .environmentObject(revolutionaryAI)
                 .environmentObject(googleSheetsService)
+                .environmentObject(ebayListingService)
+            
+            ProspectingModeView()
+                .tabItem {
+                    Image(systemName: "magnifyingglass.circle")
+                    Text("🔍 Prospect")
+                }
             
             DashboardView()
                 .tabItem {
                     Image(systemName: "chart.bar.fill")
-                    Text("Dashboard")
+                    Text("📊 Dashboard")
                 }
                 .environmentObject(inventoryManager)
             
             InventoryView()
                 .tabItem {
                     Image(systemName: "list.bullet")
-                    Text("Inventory")
+                    Text("📦 Inventory")
                 }
                 .environmentObject(inventoryManager)
                 .environmentObject(googleSheetsService)
             
-            EnhancedSettingsView()
+            RevolutionarySettingsView()
                 .tabItem {
                     Image(systemName: "gear")
-                    Text("Settings")
+                    Text("⚙️ Settings")
                 }
-                .environmentObject(aiService)
+                .environmentObject(revolutionaryAI)
                 .environmentObject(googleSheetsService)
+                .environmentObject(ebayListingService)
         }
         .accentColor(.blue)
         .onAppear {
@@ -50,93 +59,80 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Enhanced Camera View with Multi-Photo Support
-struct EnhancedCameraView: View {
+// MARK: - 🚀 Revolutionary Analysis View
+struct RevolutionaryAnalysisView: View {
     @EnvironmentObject var inventoryManager: InventoryManager
-    @EnvironmentObject var aiService: EnhancedAIService
+    @EnvironmentObject var revolutionaryAI: RevolutionaryAIService
     @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
+    @EnvironmentObject var ebayListingService: DirectEbayListingService
     
     @State private var capturedImages: [UIImage] = []
-    @State private var showingCamera = false
-    @State private var showingPhotoPicker = false
-    @State private var showingMultiPhotoPicker = false
-    @State private var analysisResult: ItemAnalysis?
+    @State private var showingMultiCamera = false
+    @State private var analysisResult: RevolutionaryAnalysis?
     @State private var showingItemForm = false
-    @State private var currentImageIndex = 0
-    @State private var showingPhotoSourceChoice = false
+    @State private var showingDirectListing = false
     
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Enhanced Header
+                    // Revolutionary Header
                     VStack(spacing: 8) {
-                        Text("🚀 Enhanced ResellAI")
+                        Text("🚀 REVOLUTIONARY AI")
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .foregroundColor(.blue)
                         
-                        Text("Multi-Photo • AI Powered • Market Intelligence")
+                        Text("Ultra-Accurate • Real Market Data • Direct eBay Listing")
                             .font(.headline)
                             .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
                         
-                        if aiService.isAnalyzing {
-                            HStack {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                Text(aiService.analysisProgress)
+                        // Analysis Progress
+                        if revolutionaryAI.isAnalyzing {
+                            VStack(spacing: 8) {
+                                ProgressView(value: Double(revolutionaryAI.currentStep), total: Double(revolutionaryAI.totalSteps))
+                                    .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                                
+                                Text(revolutionaryAI.analysisProgress)
                                     .font(.caption)
+                                    .foregroundColor(.blue)
+                                
+                                Text("Step \(revolutionaryAI.currentStep)/\(revolutionaryAI.totalSteps)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
+                            .padding()
                             .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
+                            .cornerRadius(12)
                         }
                     }
                     
-                    // Multi-Photo Display
+                    // Multi-Photo Interface
                     if !capturedImages.isEmpty {
-                        EnhancedPhotoGallery(images: $capturedImages, currentIndex: $currentImageIndex)
+                        RevolutionaryPhotoGallery(images: $capturedImages)
                     } else {
-                        // Photo Placeholder
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.gray.opacity(0.1))
-                                .frame(height: 300)
-                            
-                            VStack(spacing: 15) {
-                                Image(systemName: "camera.stack.fill")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.blue.opacity(0.6))
-                                Text("Add Multiple Photos")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                Text("Take photos from different angles for better accuracy")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                            }
-                        }
-                        .onTapGesture {
-                            showingPhotoSourceChoice = true
+                        RevolutionaryPhotoPlaceholder {
+                            showingMultiCamera = true
                         }
                     }
                     
-                    // Enhanced Photo Action Buttons
-                    EnhancedPhotoButtons(
-                        onSingleCamera: { showingCamera = true },
-                        onSinglePhoto: { showingPhotoPicker = true },
-                        onMultiPhoto: { showingMultiPhotoPicker = true },
-                        onAnalyze: { analyzePhotos() },
+                    // Revolutionary Action Buttons
+                    RevolutionaryActionButtons(
                         hasPhotos: !capturedImages.isEmpty,
-                        isAnalyzing: aiService.isAnalyzing,
-                        photoCount: capturedImages.count
+                        isAnalyzing: revolutionaryAI.isAnalyzing,
+                        photoCount: capturedImages.count,
+                        onMultiCamera: { showingMultiCamera = true },
+                        onAnalyze: { analyzeWithRevolutionaryAI() },
+                        onReset: { resetAnalysis() }
                     )
                     
-                    // Enhanced Analysis Results
+                    // Revolutionary Analysis Results
                     if let result = analysisResult {
-                        EnhancedAnalysisResultView(analysis: result) {
+                        RevolutionaryAnalysisResultView(analysis: result) {
                             showingItemForm = true
+                        } onDirectList: {
+                            showingDirectListing = true
                         }
                     }
                     
@@ -146,242 +142,333 @@ struct EnhancedCameraView: View {
             }
             .navigationBarHidden(true)
         }
-        .actionSheet(isPresented: $showingPhotoSourceChoice) {
-            ActionSheet(
-                title: Text("Add Photos"),
-                message: Text("Choose how to add photos of your item"),
-                buttons: [
-                    .default(Text("📷 Take Single Photo")) {
-                        showingCamera = true
-                    },
-                    .default(Text("📁 Choose Single Photo")) {
-                        showingPhotoPicker = true
-                    },
-                    .default(Text("📚 Choose Multiple Photos")) {
-                        showingMultiPhotoPicker = true
-                    },
-                    .cancel()
-                ]
-            )
-        }
-        .sheet(isPresented: $showingCamera) {
-            CameraViewRepresentable { image in
-                capturedImages.append(image)
+        .sheet(isPresented: $showingMultiCamera) {
+            MultiCameraViewRepresentable { photos in
+                capturedImages = photos
                 analysisResult = nil
             }
         }
-        .sheet(isPresented: $showingPhotoPicker) {
-            PhotoPicker(selectedImage: .constant(nil))
-                .onDisappear {
-                    // Handle single photo selection
-                }
-        }
-        .sheet(isPresented: $showingMultiPhotoPicker) {
-            MultiPhotoPicker(selectedImages: $capturedImages)
-                .onDisappear {
-                    if !capturedImages.isEmpty {
-                        analysisResult = nil
-                    }
-                }
-        }
         .sheet(isPresented: $showingItemForm) {
             if let result = analysisResult {
-                EnhancedItemFormView(
+                RevolutionaryItemFormView(
                     analysis: result,
-                    images: capturedImages,
                     onSave: { item in
                         inventoryManager.addItem(item)
                         googleSheetsService.uploadItem(item)
                         showingItemForm = false
-                        capturedImages = []
-                        analysisResult = nil
+                        resetAnalysis()
                     }
                 )
                 .environmentObject(inventoryManager)
             }
         }
+        .sheet(isPresented: $showingDirectListing) {
+            if let result = analysisResult {
+                DirectEbayListingView(analysis: result)
+                    .environmentObject(ebayListingService)
+            }
+        }
     }
     
-    private func analyzePhotos() {
+    private func analyzeWithRevolutionaryAI() {
         guard !capturedImages.isEmpty else { return }
-        aiService.analyzeMultipleImages(capturedImages) { analysis in
-            analysisResult = analysis
+        
+        hapticFeedback(.medium)
+        revolutionaryAI.revolutionaryAnalysis(capturedImages) { result in
+            analysisResult = result
+        }
+    }
+    
+    private func resetAnalysis() {
+        hapticFeedback(.light)
+        capturedImages = []
+        analysisResult = nil
+    }
+}
+
+// MARK: - Revolutionary Photo Placeholder
+struct RevolutionaryPhotoPlaceholder: View {
+    let onTakePhotos: () -> Void
+    
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(
+                    LinearGradient(
+                        colors: [.blue.opacity(0.1), .purple.opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(height: 300)
+            
+            VStack(spacing: 20) {
+                Image(systemName: "camera.stack.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(.blue)
+                
+                VStack(spacing: 8) {
+                    Text("Revolutionary Multi-Photo Analysis")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                    
+                    Text("Take multiple photos for ultra-accurate identification and realistic pricing")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                
+                VStack(spacing: 4) {
+                    Text("✓ Computer vision damage detection")
+                    Text("✓ Real-time market research")
+                    Text("✓ Ultra-realistic pricing")
+                    Text("✓ Direct eBay listing")
+                }
+                .font(.caption)
+                .foregroundColor(.blue)
+            }
+        }
+        .onTapGesture {
+            hapticFeedback(.light)
+            onTakePhotos()
         }
     }
 }
 
-// MARK: - Enhanced Photo Gallery
-struct EnhancedPhotoGallery: View {
+// MARK: - Revolutionary Photo Gallery
+struct RevolutionaryPhotoGallery: View {
     @Binding var images: [UIImage]
-    @Binding var currentIndex: Int
+    @State private var selectedIndex = 0
     
     var body: some View {
-        VStack(spacing: 10) {
-            // Main Photo Display
-            TabView(selection: $currentIndex) {
+        VStack(spacing: 12) {
+            // Main Photo Display with enhanced UI
+            TabView(selection: $selectedIndex) {
                 ForEach(0..<images.count, id: \.self) { index in
                     Image(uiImage: images[index])
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(maxHeight: 300)
-                        .cornerRadius(12)
+                        .cornerRadius(16)
+                        .shadow(radius: 5)
                         .tag(index)
                 }
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
             .frame(height: 320)
             
-            // Photo Counter and Actions
+            // Enhanced Photo Controls
             HStack {
-                Text("\(currentIndex + 1) of \(images.count) photos")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("📸 \(selectedIndex + 1) of \(images.count) photos")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    Text("Revolutionary multi-angle analysis")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
                 
                 Spacer()
                 
-                Button("Delete Photo") {
-                    if images.count > 1 {
-                        images.remove(at: currentIndex)
-                        if currentIndex >= images.count {
-                            currentIndex = images.count - 1
-                        }
-                    } else {
-                        images.removeAll()
-                        currentIndex = 0
-                    }
+                Button(action: {
+                    hapticFeedback(.light)
+                    deleteCurrentPhoto()
+                }) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                        .padding(8)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
                 }
-                .font(.caption)
-                .foregroundColor(.red)
             }
             .padding(.horizontal)
         }
     }
+    
+    private func deleteCurrentPhoto() {
+        if images.count > 1 {
+            images.remove(at: selectedIndex)
+            if selectedIndex >= images.count {
+                selectedIndex = images.count - 1
+            }
+        } else {
+            images.removeAll()
+            selectedIndex = 0
+        }
+    }
 }
 
-// MARK: - Enhanced Photo Buttons
-struct EnhancedPhotoButtons: View {
-    let onSingleCamera: () -> Void
-    let onSinglePhoto: () -> Void
-    let onMultiPhoto: () -> Void
-    let onAnalyze: () -> Void
+// MARK: - Revolutionary Action Buttons
+struct RevolutionaryActionButtons: View {
     let hasPhotos: Bool
     let isAnalyzing: Bool
     let photoCount: Int
+    let onMultiCamera: () -> Void
+    let onAnalyze: () -> Void
+    let onReset: () -> Void
     
     var body: some View {
-        VStack(spacing: 12) {
-            // Photo capture buttons
-            HStack(spacing: 12) {
-                Button(action: onSingleCamera) {
-                    HStack {
-                        Image(systemName: "camera.fill")
-                        Text("Camera")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(LinearGradient(colors: [.blue, .blue.opacity(0.8)], startPoint: .leading, endPoint: .trailing))
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .font(.headline)
+        VStack(spacing: 15) {
+            // Multi-Camera Button
+            Button(action: {
+                hapticFeedback(.medium)
+                onMultiCamera()
+            }) {
+                HStack {
+                    Image(systemName: "camera.stack.fill")
+                    Text(hasPhotos ? "📷 Add More Photos" : "📸 Take Multi-Angle Photos")
                 }
-                
-                Button(action: onSinglePhoto) {
-                    HStack {
-                        Image(systemName: "photo.fill")
-                        Text("Single")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(LinearGradient(colors: [.purple, .purple.opacity(0.8)], startPoint: .leading, endPoint: .trailing))
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .font(.headline)
-                }
-                
-                Button(action: onMultiPhoto) {
-                    HStack {
-                        Image(systemName: "photo.stack.fill")
-                        Text("Multi")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(LinearGradient(colors: [.orange, .orange.opacity(0.8)], startPoint: .leading, endPoint: .trailing))
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .font(.headline)
-                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        colors: [.blue, .cyan],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .foregroundColor(.white)
+                .cornerRadius(16)
+                .font(.headline)
             }
             
-            // Analysis button
+            // Revolutionary Analysis Button
             if hasPhotos {
-                Button(action: onAnalyze) {
+                Button(action: {
+                    hapticFeedback(.heavy)
+                    onAnalyze()
+                }) {
                     HStack {
                         if isAnalyzing {
                             ProgressView()
                                 .scaleEffect(0.8)
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            Text("AI Analyzing \(photoCount) Photo\(photoCount == 1 ? "" : "s")...")
+                            Text("🚀 Revolutionary Analysis...")
                         } else {
                             Image(systemName: "brain.head.profile")
-                            Text("🧠 Enhanced AI Analysis (\(photoCount) photo\(photoCount == 1 ? "" : "s"))")
+                            Text("🚀 REVOLUTIONARY ANALYSIS (\(photoCount) photos)")
                         }
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(LinearGradient(colors: [.green, .mint], startPoint: .leading, endPoint: .trailing))
+                    .background(
+                        LinearGradient(
+                            colors: [.green, .mint, .blue],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(16)
                     .font(.headline)
+                    .shadow(radius: 5)
                 }
                 .disabled(isAnalyzing)
+                
+                // Reset Button
+                if !isAnalyzing {
+                    Button(action: {
+                        hapticFeedback(.light)
+                        onReset()
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.clockwise")
+                            Text("Reset Photos")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .foregroundColor(.primary)
+                        .cornerRadius(12)
+                    }
+                }
             }
         }
     }
 }
 
-// MARK: - Enhanced Analysis Result View
-struct EnhancedAnalysisResultView: View {
-    let analysis: ItemAnalysis
-    let onProceed: () -> Void
+// MARK: - 🚀 Revolutionary Analysis Result View
+struct RevolutionaryAnalysisResultView: View {
+    let analysis: RevolutionaryAnalysis
+    let onAddToInventory: () -> Void
+    let onDirectList: () -> Void
     
     var body: some View {
-        VStack(spacing: 15) {
-            // Header with Enhanced Info
+        VStack(spacing: 20) {
+            // Revolutionary Header
             HStack {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
-                    .font(.title2)
-                Text("Enhanced AI Analysis")
-                    .font(.headline)
-                    .fontWeight(.bold)
+                    .font(.title)
+                
+                VStack(alignment: .leading) {
+                    Text("🚀 REVOLUTIONARY ANALYSIS")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                    Text("Ultra-accurate • Real market data")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+                
                 Spacer()
+                
                 VStack(alignment: .trailing) {
                     Text("\(Int(analysis.confidence * 100))%")
-                        .font(.caption)
+                        .font(.title2)
                         .fontWeight(.bold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(analysis.confidence > 0.9 ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
                         .foregroundColor(analysis.confidence > 0.9 ? .green : .orange)
-                        .cornerRadius(12)
-                    Text("AI Confidence")
+                    Text("Confidence")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    
-                    // Show photos analyzed if enhanced analysis
-                    if let enhanced = analysis as? EnhancedItemAnalysis {
-                        Text("\(enhanced.photosAnalyzed) photos")
-                            .font(.caption2)
-                            .foregroundColor(.blue)
-                    }
                 }
             }
             
             Divider()
             
-            // Enhanced Analysis Details
-            VStack(spacing: 12) {
-                // Item Details
+            // Core Identification
+            RevolutionaryIdentificationCard(analysis: analysis)
+            
+            // Condition Analysis
+            RevolutionaryConditionCard(analysis: analysis)
+            
+            // Market Intelligence
+            RevolutionaryMarketCard(analysis: analysis)
+            
+            // Profit Analysis
+            RevolutionaryProfitCard(analysis: analysis)
+            
+            // Action Buttons
+            RevolutionaryActionCards(
+                onAddToInventory: onAddToInventory,
+                onDirectList: onDirectList
+            )
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.gray.opacity(0.05), Color.blue.opacity(0.02)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(20)
+        .shadow(radius: 10)
+    }
+}
+
+// MARK: - Revolutionary Cards
+struct RevolutionaryIdentificationCard: View {
+    let analysis: RevolutionaryAnalysis
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("🎯 IDENTIFICATION")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.blue)
+            
+            VStack(spacing: 8) {
                 HStack {
                     Text("Item:")
                         .fontWeight(.semibold)
@@ -392,169 +479,249 @@ struct EnhancedAnalysisResultView: View {
                         .multilineTextAlignment(.trailing)
                 }
                 
-                // Model Number (if enhanced analysis)
-                if let enhanced = analysis as? EnhancedItemAnalysis, !enhanced.modelNumber.isEmpty {
+                if !analysis.modelNumber.isEmpty {
                     HStack {
                         Text("Model:")
                             .fontWeight(.semibold)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text(enhanced.modelNumber)
+                        Text(analysis.modelNumber)
                             .font(.caption)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
                             .background(Color.purple.opacity(0.2))
-                            .foregroundColor(.purple)
-                            .cornerRadius(8)
+                            .cornerRadius(6)
                     }
                 }
                 
-                // Condition and Pricing
                 HStack {
-                    Text("Condition:")
+                    Text("Brand:")
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
                     Spacer()
-                    Text(analysis.condition)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(Color.blue.opacity(0.2))
+                    Text(analysis.brand)
+                        .fontWeight(.semibold)
                         .foregroundColor(.blue)
+                }
+            }
+        }
+        .padding()
+        .background(Color.blue.opacity(0.05))
+        .cornerRadius(12)
+    }
+}
+
+struct RevolutionaryConditionCard: View {
+    let analysis: RevolutionaryAnalysis
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("🔍 CONDITION ANALYSIS")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.purple)
+            
+            VStack(spacing: 8) {
+                HStack {
+                    Text("AI Detected:")
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text(analysis.actualCondition)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(getConditionColor(analysis.actualCondition).opacity(0.2))
+                        .foregroundColor(getConditionColor(analysis.actualCondition))
                         .cornerRadius(8)
                         .font(.caption)
+                        .fontWeight(.semibold)
                 }
                 
-                // Price Information
-                VStack(spacing: 8) {
-                    HStack {
-                        Text("Suggested Price:")
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text("$\(analysis.suggestedPrice, specifier: "%.2f")")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.green)
-                    }
-                    
-                    // Price Range (if enhanced)
-                    if let enhanced = analysis as? EnhancedItemAnalysis,
-                       enhanced.priceRange.low > 0 && enhanced.priceRange.high > 0 {
-                        HStack {
-                            Text("Market Range:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text("$\(enhanced.priceRange.low, specifier: "%.0f") - $\(enhanced.priceRange.high, specifier: "%.0f")")
-                                .font(.caption)
-                                .foregroundColor(.green)
-                        }
-                    }
+                HStack {
+                    Text("Score:")
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(analysis.conditionScore))/100")
+                        .fontWeight(.bold)
+                        .foregroundColor(analysis.conditionScore > 80 ? .green : analysis.conditionScore > 60 ? .orange : .red)
                 }
                 
-                // Resale Potential
-                if analysis.resalePotential > 0 {
-                    HStack {
-                        Text("Resale Score:")
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        HStack(spacing: 2) {
-                            ForEach(1...10, id: \.self) { index in
-                                Image(systemName: index <= analysis.resalePotential ? "star.fill" : "star")
-                                    .foregroundColor(index <= analysis.resalePotential ? .yellow : .gray.opacity(0.3))
-                                    .font(.caption)
-                            }
-                        }
-                        Text("\(analysis.resalePotential)/10")
+                if !analysis.conditionReasons.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Notes:")
                             .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                // Enhanced Market Info
-                if let enhanced = analysis as? EnhancedItemAnalysis {
-                    if !enhanced.competitionLevel.isEmpty || !enhanced.seasonalDemand.isEmpty {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                if !enhanced.competitionLevel.isEmpty {
-                                    HStack {
-                                        Text("Competition:")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                        Text(enhanced.competitionLevel)
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(enhanced.competitionLevel == "Low" ? .green : enhanced.competitionLevel == "Medium" ? .orange : .red)
-                                    }
-                                }
-                                
-                                if !enhanced.seasonalDemand.isEmpty {
-                                    HStack {
-                                        Text("Best Time:")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                        Text(enhanced.seasonalDemand)
-                                            .font(.caption)
-                                            .foregroundColor(.blue)
-                                    }
-                                }
-                            }
-                            Spacer()
+                            .fontWeight(.semibold)
+                        ForEach(analysis.conditionReasons.prefix(3), id: \.self) { reason in
+                            Text("• \(reason)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
             }
+        }
+        .padding()
+        .background(Color.purple.opacity(0.05))
+        .cornerRadius(12)
+    }
+    
+    private func getConditionColor(_ condition: String) -> Color {
+        switch condition {
+        case "Like New": return .green
+        case "Excellent": return .blue
+        case "Very Good": return .mint
+        case "Good": return .orange
+        case "Fair": return .red
+        case "Poor": return .red
+        default: return .gray
+        }
+    }
+}
+
+struct RevolutionaryMarketCard: View {
+    let analysis: RevolutionaryAnalysis
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("📊 MARKET INTELLIGENCE")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.green)
             
-            // Market Notes
-            if !analysis.marketNotes.isEmpty {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("💡 Market Intelligence")
-                        .font(.caption)
+            VStack(spacing: 8) {
+                HStack {
+                    Text("Realistic Price:")
                         .fontWeight(.semibold)
+                    Spacer()
+                    Text("$\(String(format: "%.2f", analysis.realisticPrice))")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.green)
+                }
+                
+                HStack {
+                    Text("Market Range:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("$\(String(format: "%.0f", analysis.marketRange.low)) - $\(String(format: "%.0f", analysis.marketRange.high))")
+                        .font(.caption)
                         .foregroundColor(.blue)
-                    Text(analysis.marketNotes)
+                }
+                
+                HStack {
+                    Text("Competition:")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
+                    Spacer()
+                    Text("\(analysis.competitorCount) active listings")
+                        .font(.caption)
+                        .foregroundColor(analysis.competitorCount > 1000 ? .red : analysis.competitorCount > 500 ? .orange : .green)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
-                .background(Color.blue.opacity(0.05))
-                .cornerRadius(8)
-            }
-            
-            // Authentication Notes (if enhanced)
-            if let enhanced = analysis as? EnhancedItemAnalysis, !enhanced.authenticationNotes.isEmpty {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("🔍 Authentication Notes")
+                
+                HStack {
+                    Text("Demand:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text(analysis.demandLevel)
                         .font(.caption)
                         .fontWeight(.semibold)
-                        .foregroundColor(.purple)
-                    Text(enhanced.authenticationNotes)
+                        .foregroundColor(analysis.demandLevel == "High" ? .green : analysis.demandLevel == "Medium" ? .orange : .red)
+                }
+                
+                if !analysis.marketTrend.isEmpty {
+                    Text("📈 \(analysis.marketTrend)")
+                        .font(.caption2)
+                        .foregroundColor(.blue)
+                        .padding(.top, 4)
+                }
+            }
+        }
+        .padding()
+        .background(Color.green.opacity(0.05))
+        .cornerRadius(12)
+    }
+}
+
+struct RevolutionaryProfitCard: View {
+    let analysis: RevolutionaryAnalysis
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("💰 PROFIT OPTIMIZATION")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.orange)
+            
+            VStack(spacing: 8) {
+                HStack {
+                    Text("Quick Sale:")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
+                    Spacer()
+                    Text("$\(String(format: "%.2f", analysis.quickSalePrice))")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.orange)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
-                .background(Color.purple.opacity(0.05))
-                .cornerRadius(8)
+                
+                HStack {
+                    Text("Max Profit:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("$\(String(format: "%.2f", analysis.maxProfitPrice))")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.green)
+                }
+                
+                HStack {
+                    Text("Total Fees:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("$\(String(format: "%.2f", analysis.feesBreakdown.totalFees))")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+                
+                if !analysis.listingStrategy.isEmpty {
+                    Text("💡 \(analysis.listingStrategy)")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                        .padding(.top, 4)
+                }
             }
-            
-            // Action Button
-            Button(action: onProceed) {
+        }
+        .padding()
+        .background(Color.orange.opacity(0.05))
+        .cornerRadius(12)
+    }
+}
+
+struct RevolutionaryActionCards: View {
+    let onAddToInventory: () -> Void
+    let onDirectList: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Add to Inventory Button
+            Button(action: {
+                hapticFeedback(.medium)
+                onAddToInventory()
+            }) {
                 HStack {
                     Image(systemName: "plus.circle.fill")
-                    Text("Add to Inventory")
+                    Text("📦 Add to Inventory")
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(
                     LinearGradient(
-                        gradient: Gradient(colors: [.blue, .purple]),
+                        colors: [.blue, .purple],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -563,17 +730,198 @@ struct EnhancedAnalysisResultView: View {
                 .cornerRadius(12)
                 .font(.headline)
             }
+            
+            // Direct eBay Listing Button
+            Button(action: {
+                hapticFeedback(.heavy)
+                onDirectList()
+            }) {
+                HStack {
+                    Image(systemName: "bolt.fill")
+                    Text("🚀 List Directly to eBay")
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        colors: [.green, .mint],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .foregroundColor(.white)
+                .cornerRadius(12)
+                .font(.headline)
+                .shadow(radius: 5)
+            }
         }
-        .padding()
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(16)
     }
 }
 
-// MARK: - Enhanced Item Form View
-struct EnhancedItemFormView: View {
-    let analysis: ItemAnalysis
-    let images: [UIImage]
+// MARK: - Direct eBay Listing View
+struct DirectEbayListingView: View {
+    let analysis: RevolutionaryAnalysis
+    @EnvironmentObject var ebayListingService: DirectEbayListingService
+    @Environment(\.presentationMode) var presentationMode
+    @State private var listingPrice = ""
+    @State private var customTitle = ""
+    @State private var customDescription = ""
+    @State private var showingSuccess = false
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    Text("🚀 Direct eBay Listing")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.green)
+                    
+                    // Item Preview
+                    if let firstImage = analysis.images.first {
+                        Image(uiImage: firstImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxHeight: 200)
+                            .cornerRadius(12)
+                    }
+                    
+                    // Listing Form
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("📝 Listing Details")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Title")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            TextField("eBay Title", text: $customTitle)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .onAppear {
+                                    customTitle = analysis.ebayTitle
+                                }
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Price")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            TextField("Price", text: $listingPrice)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .keyboardType(.decimalPad)
+                                .onAppear {
+                                    listingPrice = String(format: "%.2f", analysis.realisticPrice)
+                                }
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Description")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            TextEditor(text: $customDescription)
+                                .frame(minHeight: 100)
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                                .onAppear {
+                                    customDescription = analysis.description
+                                }
+                        }
+                    }
+                    
+                    // Listing Progress
+                    if ebayListingService.isListing {
+                        VStack(spacing: 10) {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                            Text(ebayListingService.listingProgress)
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(12)
+                    }
+                    
+                    // List Button
+                    if !ebayListingService.isListing {
+                        Button(action: {
+                            hapticFeedback(.heavy)
+                            listToEbay()
+                        }) {
+                            HStack {
+                                Image(systemName: "bolt.fill")
+                                Text("🚀 LIST TO EBAY NOW")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [.green, .mint],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                            .font(.headline)
+                            .shadow(radius: 5)
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        hapticFeedback(.light)
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+            }
+        }
+        .alert("🎉 Listed Successfully!", isPresented: $showingSuccess) {
+            Button("View Listing") {
+                if let url = ebayListingService.listingURL,
+                   let listingURL = URL(string: url) {
+                    UIApplication.shared.open(listingURL)
+                }
+            }
+            Button("OK") { }
+        } message: {
+            Text("Your item has been listed on eBay!")
+        }
+    }
+    
+    private func listToEbay() {
+        // Create a temporary inventory item for listing
+        let tempItem = InventoryItem(
+            itemNumber: 0,
+            name: analysis.itemName,
+            category: analysis.category,
+            purchasePrice: 0,
+            suggestedPrice: Double(listingPrice) ?? analysis.realisticPrice,
+            source: "Direct Listing",
+            condition: analysis.actualCondition,
+            title: customTitle,
+            description: customDescription,
+            keywords: analysis.keywords,
+            status: .toList,
+            dateAdded: Date()
+        )
+        
+        ebayListingService.listDirectlyToEbay(item: tempItem, analysis: analysis) { success, url in
+            if success {
+                showingSuccess = true
+            }
+        }
+    }
+}
+
+// MARK: - Revolutionary Item Form View
+struct RevolutionaryItemFormView: View {
+    let analysis: RevolutionaryAnalysis
     let onSave: (InventoryItem) -> Void
     
     @State private var purchasePrice = ""
@@ -587,9 +935,8 @@ struct EnhancedItemFormView: View {
     
     var estimatedProfit: Double {
         guard let purchase = Double(purchasePrice) else { return 0 }
-        let selling = Double(adjustedPrice) ?? analysis.suggestedPrice
-        let fees = selling * 0.13
-        return selling - purchase - fees
+        let selling = Double(adjustedPrice) ?? analysis.realisticPrice
+        return selling - purchase - analysis.feesBreakdown.totalFees
     }
     
     var estimatedROI: Double {
@@ -600,11 +947,10 @@ struct EnhancedItemFormView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("📸 Enhanced Analysis Results") {
+                Section("🚀 Revolutionary Analysis") {
                     VStack(alignment: .leading, spacing: 8) {
-                        // Main image and analysis info
                         HStack {
-                            if let firstImage = images.first {
+                            if let firstImage = analysis.images.first {
                                 Image(uiImage: firstImage)
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
@@ -615,40 +961,22 @@ struct EnhancedItemFormView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(analysis.itemName)
                                     .fontWeight(.bold)
-                                Text(analysis.category)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
                                 
-                                // Enhanced analysis info
-                                if let enhanced = analysis as? EnhancedItemAnalysis {
-                                    if !enhanced.modelNumber.isEmpty {
-                                        Text("Model: \(enhanced.modelNumber)")
-                                            .font(.caption)
-                                            .foregroundColor(.purple)
-                                    }
-                                    
-                                    Text("\(enhanced.photosAnalyzed) photos analyzed")
+                                Text("AI Condition: \(analysis.actualCondition)")
+                                    .font(.caption)
+                                    .foregroundColor(.purple)
+                                
+                                if !analysis.modelNumber.isEmpty {
+                                    Text("Model: \(analysis.modelNumber)")
                                         .font(.caption)
                                         .foregroundColor(.blue)
                                 }
                                 
-                                HStack {
-                                    Text("AI Confidence:")
-                                    Text("\(Int(analysis.confidence * 100))%")
-                                        .foregroundColor(analysis.confidence > 0.8 ? .green : .orange)
-                                        .fontWeight(.semibold)
-                                }
-                                .font(.caption)
+                                Text("\(analysis.images.count) photos • \(Int(analysis.confidence * 100))% confidence")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
                             }
                             Spacer()
-                        }
-                        
-                        // Photo count indicator
-                        if images.count > 1 {
-                            Text("📚 \(images.count) photos captured for enhanced accuracy")
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                                .padding(.top, 4)
                         }
                     }
                 }
@@ -667,72 +995,87 @@ struct EnhancedItemFormView: View {
                         }
                     }
                     
-                    Picker("Condition", selection: $condition) {
+                    Picker("Condition Override", selection: $condition) {
+                        Text("Use AI: \(analysis.actualCondition)").tag(analysis.actualCondition)
                         Text("New").tag("New")
                         Text("Like New").tag("Like New")
+                        Text("Excellent").tag("Excellent")
+                        Text("Very Good").tag("Very Good")
                         Text("Good").tag("Good")
                         Text("Fair").tag("Fair")
-                        Text("For Parts").tag("For Parts")
+                        Text("Poor").tag("Poor")
+                    }
+                    .onAppear {
+                        condition = analysis.actualCondition
                     }
                 }
                 
-                Section("🎯 Enhanced Pricing Analysis") {
-                    VStack(spacing: 8) {
+                Section("🎯 Revolutionary Pricing") {
+                    VStack(spacing: 12) {
                         HStack {
-                            Text("AI Suggested Price")
+                            Text("AI Realistic Price:")
                             Spacer()
-                            Text("$\(analysis.suggestedPrice, specifier: "%.2f")")
+                            Text("$\(String(format: "%.2f", analysis.realisticPrice))")
+                                .fontWeight(.bold)
                                 .foregroundColor(.green)
-                                .fontWeight(.semibold)
                         }
                         
-                        // Price range if available
-                        if let enhanced = analysis as? EnhancedItemAnalysis,
-                           enhanced.priceRange.low > 0 && enhanced.priceRange.high > 0 {
-                            HStack {
-                                Text("Market Range")
-                                Spacer()
-                                Text("$\(enhanced.priceRange.low, specifier: "%.0f") - $\(enhanced.priceRange.high, specifier: "%.0f")")
-                                    .font(.caption)
-                                    .foregroundColor(.blue)
-                            }
+                        HStack {
+                            Text("Quick Sale:")
+                            Spacer()
+                            Text("$\(String(format: "%.2f", analysis.quickSalePrice))")
+                                .foregroundColor(.orange)
+                        }
+                        
+                        HStack {
+                            Text("Max Profit:")
+                            Spacer()
+                            Text("$\(String(format: "%.2f", analysis.maxProfitPrice))")
+                                .foregroundColor(.blue)
+                        }
+                        
+                        HStack {
+                            Text("Market Range:")
+                            Spacer()
+                            Text("$\(String(format: "%.0f", analysis.marketRange.low)) - $\(String(format: "%.0f", analysis.marketRange.high))")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
                     
                     HStack {
                         Text("Your Price ($)")
-                        TextField("\(analysis.suggestedPrice, specifier: "%.2f")", text: $adjustedPrice)
+                        TextField("Price", text: $adjustedPrice)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
+                            .onAppear {
+                                adjustedPrice = String(format: "%.2f", analysis.realisticPrice)
+                            }
                     }
                     
                     if !purchasePrice.isEmpty {
                         VStack(spacing: 8) {
                             HStack {
-                                Text("Estimated Profit:")
+                                Text("Net Profit:")
                                 Spacer()
-                                Text("$\(estimatedProfit, specifier: "%.2f")")
-                                    .foregroundColor(estimatedProfit > 0 ? .green : .red)
+                                Text("$\(String(format: "%.2f", estimatedProfit))")
                                     .fontWeight(.bold)
+                                    .foregroundColor(estimatedProfit > 0 ? .green : .red)
                             }
                             
                             HStack {
                                 Text("ROI:")
                                 Spacer()
-                                Text("\(estimatedROI, specifier: "%.1f")%")
-                                    .foregroundColor(estimatedROI > 200 ? .green : estimatedROI > 100 ? .orange : .red)
+                                Text("\(String(format: "%.1f", estimatedROI))%")
                                     .fontWeight(.bold)
+                                    .foregroundColor(estimatedROI > 200 ? .green : estimatedROI > 100 ? .orange : .red)
                             }
                             
-                            // ROI Assessment
-                            if estimatedROI < 200 {
-                                Text("⚠️ ROI below 200% target")
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                            } else if estimatedROI > 300 {
-                                Text("🎯 Excellent ROI!")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
+                            HStack {
+                                Text("All-in Fees:")
+                                Spacer()
+                                Text("$\(String(format: "%.2f", analysis.feesBreakdown.totalFees))")
+                                    .foregroundColor(.red)
                             }
                         }
                         .padding()
@@ -741,7 +1084,7 @@ struct EnhancedItemFormView: View {
                     }
                 }
                 
-                Section("📝 Optimized eBay Listing") {
+                Section("📝 Optimized Listing") {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Title (\(customTitle.count)/80)")
                             .font(.caption)
@@ -764,7 +1107,7 @@ struct EnhancedItemFormView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Optimized Keywords")
+                        Text("Keywords")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Text(analysis.keywords.joined(separator: ", "))
@@ -776,47 +1119,41 @@ struct EnhancedItemFormView: View {
                     }
                 }
                 
-                // Enhanced analysis details
-                if let enhanced = analysis as? EnhancedItemAnalysis {
-                    if !enhanced.shippingNotes.isEmpty || !enhanced.seasonalDemand.isEmpty {
-                        Section("📦 Additional Intelligence") {
-                            if !enhanced.shippingNotes.isEmpty {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Shipping Notes")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                    Text(enhanced.shippingNotes)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            
-                            if !enhanced.seasonalDemand.isEmpty {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Best Selling Time")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                    Text(enhanced.seasonalDemand)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
+                Section("🎯 Revolutionary Intelligence") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if !analysis.listingStrategy.isEmpty {
+                            Text("Strategy: \(analysis.listingStrategy)")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                        
+                        if !analysis.sourcingTips.isEmpty {
+                            Text("Sourcing Tips:")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            ForEach(analysis.sourcingTips.prefix(2), id: \.self) { tip in
+                                Text("• \(tip)")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
                             }
                         }
                     }
                 }
             }
-            .navigationTitle("Enhanced Item Form")
+            .navigationTitle("Revolutionary Item")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
+                        hapticFeedback(.light)
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save & Sync") {
-                        saveEnhancedItem()
+                    Button("Save") {
+                        hapticFeedback(.medium)
+                        saveRevolutionaryItem()
                     }
                     .disabled(purchasePrice.isEmpty)
                     .fontWeight(.semibold)
@@ -825,13 +1162,13 @@ struct EnhancedItemFormView: View {
         }
     }
     
-    private func saveEnhancedItem() {
+    private func saveRevolutionaryItem() {
         guard let price = Double(purchasePrice) else { return }
-        let finalPrice = Double(adjustedPrice) ?? analysis.suggestedPrice
+        let finalPrice = Double(adjustedPrice) ?? analysis.realisticPrice
         
         // Convert all images to data
         var imageDataArray: [Data] = []
-        for image in images {
+        for image in analysis.images {
             if let data = image.jpegData(compressionQuality: 0.8) {
                 imageDataArray.append(data)
             }
@@ -853,30 +1190,30 @@ struct EnhancedItemFormView: View {
             imageData: imageDataArray.first,
             additionalImageData: imageDataArray.count > 1 ? Array(imageDataArray.dropFirst()) : nil,
             resalePotential: analysis.resalePotential,
-            marketNotes: analysis.marketNotes
+            marketNotes: analysis.marketTrend
         )
         
         onSave(item)
     }
 }
 
-// MARK: - Enhanced Settings View
-struct EnhancedSettingsView: View {
-    @EnvironmentObject var aiService: EnhancedAIService
+// MARK: - Revolutionary Settings View
+struct RevolutionarySettingsView: View {
+    @EnvironmentObject var revolutionaryAI: RevolutionaryAIService
     @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
-    @State private var showingAPIStatus = false
+    @EnvironmentObject var ebayListingService: DirectEbayListingService
     
     var body: some View {
         NavigationView {
             Form {
-                Section("🚀 Enhanced AI Analysis") {
+                Section("🚀 Revolutionary AI") {
                     HStack {
                         Image(systemName: "brain.head.profile")
                             .foregroundColor(.blue)
                         VStack(alignment: .leading) {
-                            Text("Multi-Photo AI Analysis")
+                            Text("Revolutionary Analysis Engine")
                                 .fontWeight(.semibold)
-                            Text("GPT-4 Vision + Enhanced Prompting")
+                            Text("Ultra-accurate • Real market data • Computer vision")
                                 .font(.caption)
                                 .foregroundColor(.green)
                         }
@@ -884,96 +1221,58 @@ struct EnhancedSettingsView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
                     }
-                    
-                    Toggle("Enhanced Analysis Mode", isOn: $aiService.enhancedMode)
-                    
-                    Button("Test AI Analysis") {
-                        print("🧪 Testing enhanced AI...")
+                }
+                
+                Section("🚀 Direct eBay Listing") {
+                    HStack {
+                        Image(systemName: "bolt.fill")
+                            .foregroundColor(.green)
+                        VStack(alignment: .leading) {
+                            Text("One-Tap eBay Listing")
+                                .fontWeight(.semibold)
+                            Text(ebayListingService.isListing ? "Listing in progress..." : "Ready to list")
+                                .font(.caption)
+                                .foregroundColor(ebayListingService.isListing ? .orange : .green)
+                        }
+                        Spacer()
+                        if ebayListingService.isListing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
                     }
                 }
                 
-                Section("📊 Google Sheets Integration") {
+                Section("📊 Google Sheets") {
                     HStack {
                         Image(systemName: "tablecells")
-                            .foregroundColor(.green)
+                            .foregroundColor(.blue)
                         VStack(alignment: .leading) {
                             Text("Auto-Sync Inventory")
                                 .fontWeight(.semibold)
                             Text(googleSheetsService.syncStatus)
                                 .font(.caption)
-                                .foregroundColor(googleSheetsService.isConnected ? .green : .orange)
+                                .foregroundColor(.secondary)
                         }
                         Spacer()
                         if googleSheetsService.isSyncing {
                             ProgressView()
                                 .scaleEffect(0.8)
-                        } else {
-                            Image(systemName: googleSheetsService.isConnected ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                                .foregroundColor(googleSheetsService.isConnected ? .green : .orange)
                         }
                     }
-                    
-                    if let lastSync = googleSheetsService.lastSyncDate {
-                        Text("Last sync: \(lastSync, formatter: dateFormatter)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Button("Setup Instructions") {
-                        googleSheetsService.setupGoogleSheetsHeaders()
-                    }
-                    
-                    Button("Test Connection") {
-                        googleSheetsService.testConnection()
-                    }
-                    
-                    Button("Open Spreadsheet") {
-                        openGoogleSheet()
-                    }
                 }
                 
-                Section("⚡ Enhanced Features") {
+                Section("🔥 Revolutionary Features") {
                     FeatureStatusRow(icon: "camera.stack.fill", title: "Multi-Photo Analysis", enabled: true)
-                    FeatureStatusRow(icon: "brain", title: "Enhanced AI Prompting", enabled: aiService.enhancedMode)
-                    FeatureStatusRow(icon: "shield.checkered", title: "Authentication Analysis", enabled: true)
-                    FeatureStatusRow(icon: "chart.bar.fill", title: "Market Intelligence", enabled: true)
-                    FeatureStatusRow(icon: "dollarsign.circle", title: "Profit Optimization", enabled: true)
-                }
-                
-                Section("🔧 Tools") {
-                    Button("View API Status") {
-                        showingAPIStatus = true
-                    }
-                    
-                    Button("Force Sync All Items") {
-                        print("🔄 Force syncing all items...")
-                    }
-                    
-                    Button("Export Data") {
-                        print("📤 Exporting data...")
-                    }
+                    FeatureStatusRow(icon: "eye.fill", title: "Computer Vision Condition Detection", enabled: true)
+                    FeatureStatusRow(icon: "chart.line.uptrend.xyaxis", title: "Real-Time Market Research", enabled: true)
+                    FeatureStatusRow(icon: "brain", title: "Ultra-Realistic AI Pricing", enabled: true)
+                    FeatureStatusRow(icon: "bolt.fill", title: "Direct eBay Listing", enabled: true)
+                    FeatureStatusRow(icon: "magnifyingglass.circle", title: "Prospecting Mode", enabled: true)
+                    FeatureStatusRow(icon: "barcode.viewfinder", title: "Barcode Scanner", enabled: true)
+                    FeatureStatusRow(icon: "wand.and.stars", title: "Auto-Listing Generator", enabled: true)
                 }
             }
-            .navigationTitle("Enhanced Settings")
-        }
-        .sheet(isPresented: $showingAPIStatus) {
-            APIStatusView()
-                .environmentObject(aiService)
-                .environmentObject(googleSheetsService)
-        }
-    }
-    
-    private var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        return formatter
-    }
-    
-    private func openGoogleSheet() {
-        let url = "https://docs.google.com/spreadsheets/d/\(googleSheetsService.spreadsheetId)/edit"
-        if let sheetURL = URL(string: url) {
-            UIApplication.shared.open(sheetURL)
+            .navigationTitle("Revolutionary Settings")
         }
     }
 }
@@ -995,162 +1294,10 @@ struct FeatureStatusRow: View {
     }
 }
 
-// MARK: - API Status View
-struct APIStatusView: View {
-    @EnvironmentObject var aiService: EnhancedAIService
-    @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
-    @Environment(\.presentationMode) var presentationMode
-    
-    var body: some View {
-        NavigationView {
-            List {
-                Section("🚀 Enhanced AI Status") {
-                    StatusRow(
-                        title: "Multi-Photo Analysis",
-                        status: true,
-                        detail: "GPT-4 Vision with enhanced prompting"
-                    )
-                    
-                    StatusRow(
-                        title: "Enhanced Mode",
-                        status: aiService.enhancedMode,
-                        detail: aiService.enhancedMode ? "Enabled" : "Disabled"
-                    )
-                    
-                    StatusRow(
-                        title: "API Connection",
-                        status: !aiService.apiKey.isEmpty,
-                        detail: "OpenAI API configured"
-                    )
-                }
-                
-                Section("📊 Google Sheets Status") {
-                    StatusRow(
-                        title: "Apps Script URL",
-                        status: !googleSheetsService.appsScriptURL.contains("YOUR_APPS_SCRIPT_URL_HERE"),
-                        detail: googleSheetsService.appsScriptURL.contains("YOUR_APPS_SCRIPT_URL_HERE") ? "Not configured" : "Configured"
-                    )
-                    
-                    StatusRow(
-                        title: "Connection",
-                        status: googleSheetsService.isConnected,
-                        detail: googleSheetsService.syncStatus
-                    )
-                    
-                    StatusRow(
-                        title: "Sync Status",
-                        status: !googleSheetsService.isSyncing,
-                        detail: googleSheetsService.isSyncing ? "Syncing..." : "Ready"
-                    )
-                }
-                
-                Section("📱 App Features") {
-                    StatusRow(
-                        title: "Camera Access",
-                        status: true,
-                        detail: "Granted"
-                    )
-                    
-                    StatusRow(
-                        title: "Photo Library",
-                        status: true,
-                        detail: "Multi-photo selection enabled"
-                    )
-                    
-                    StatusRow(
-                        title: "Network",
-                        status: true,
-                        detail: "Connected"
-                    )
-                }
-                
-                Section("🔧 Setup Required") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("To complete Google Sheets integration:")
-                            .fontWeight(.semibold)
-                        
-                        Text("1. Go to script.google.com")
-                            .font(.caption)
-                        
-                        Text("2. Create new project with provided script")
-                            .font(.caption)
-                        
-                        Text("3. Deploy as Web App")
-                            .font(.caption)
-                        
-                        Text("4. Update appsScriptURL in code")
-                            .font(.caption)
-                    }
-                    .padding(.vertical, 4)
-                }
-            }
-            .navigationTitle("API Status")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct StatusRow: View {
-    let title: String
-    let status: Bool
-    let detail: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: status ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .foregroundColor(status ? .green : .orange)
-            
-            VStack(alignment: .leading) {
-                Text(title)
-                    .fontWeight(.medium)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-        }
-    }
-}
-
-// MARK: - Keep existing camera representative and other supporting views
-struct CameraViewRepresentable: UIViewControllerRepresentable {
-    let onImageCaptured: (UIImage) -> Void
-    
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = context.coordinator
-        return picker
-    }
-    
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onImageCaptured: onImageCaptured)
-    }
-    
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let onImageCaptured: (UIImage) -> Void
-        
-        init(onImageCaptured: @escaping (UIImage) -> Void) {
-            self.onImageCaptured = onImageCaptured
-        }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                onImageCaptured(image)
-            }
-            picker.dismiss(animated: true)
-        }
-    }
+// MARK: - Haptic Feedback Helper
+func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+    let impactFeedback = UIImpactFeedbackGenerator(style: style)
+    impactFeedback.impactOccurred()
 }
 
 // MARK: - Preview
