@@ -2,11 +2,11 @@
 import SwiftUI
 import Foundation
 
-// MARK: - Enhanced Core Models with Smart Inventory System
+// MARK: - Core Models with Smart Inventory System
 struct InventoryItem: Identifiable, Codable {
     let id = UUID()
     var itemNumber: Int
-    var inventoryCode: String = "" // 🆕 Smart inventory code (e.g., "A-001", "B-023")
+    var inventoryCode: String = "" // Smart inventory code (e.g., "A-001", "B-023")
     var name: String
     var category: String
     var purchasePrice: Double
@@ -27,7 +27,7 @@ struct InventoryItem: Identifiable, Codable {
     var resalePotential: Int?
     var marketNotes: String?
     
-    // Revolutionary additions
+    // AI analysis fields
     var conditionScore: Double?
     var aiConfidence: Double?
     var competitorCount: Int?
@@ -35,7 +35,7 @@ struct InventoryItem: Identifiable, Codable {
     var listingStrategy: String?
     var sourcingTips: [String]?
     
-    // ✅ NEW: Barcode support and enhanced fields
+    // Barcode support and product details
     var barcode: String?
     var brand: String = ""
     var size: String = ""
@@ -44,7 +44,7 @@ struct InventoryItem: Identifiable, Codable {
     var subcategory: String = ""
     var authenticationNotes: String = ""
     
-    // ✅ NEW: Physical inventory management
+    // Physical inventory management
     var storageLocation: String = "" // Where it's physically stored
     var binNumber: String = ""       // Specific bin/box number
     var isPackaged: Bool = false     // Ready for shipping
@@ -123,7 +123,7 @@ struct InventoryItem: Identifiable, Codable {
         return (estimatedProfit / purchasePrice) * 100
     }
     
-    // Revolutionary profit calculations
+    // Net profit calculations
     var netProfitAfterAllFees: Double {
         let totalFees = suggestedPrice * 0.1325 + 8.50 + 0.30 // eBay + shipping + listing
         return suggestedPrice - purchasePrice - totalFees
@@ -135,7 +135,7 @@ struct InventoryItem: Identifiable, Codable {
     }
 }
 
-// ✅ FIXED ItemStatus enum with migration support
+// FIXED ItemStatus enum with migration support
 enum ItemStatus: String, CaseIterable, Codable {
     case photographed = "📷 Photographed"
     case analyzed = "🧠 AI Analyzed"
@@ -144,7 +144,7 @@ enum ItemStatus: String, CaseIterable, Codable {
     case sold = "💰 Sold"
     case prospecting = "🔍 Prospecting"
     
-    // ✅ MIGRATION SUPPORT for old enum values
+    // Migration support for old enum values
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let rawValue = try container.decode(String.self)
@@ -193,6 +193,66 @@ enum ItemStatus: String, CaseIterable, Codable {
     }
 }
 
+// MARK: - Smart Inventory Categories
+enum InventoryCategory: String, CaseIterable {
+    case tshirts = "T-Shirts"
+    case jackets = "Jackets & Outerwear"
+    case jeans = "Jeans & Denim"
+    case workPants = "Work Pants"
+    case dresses = "Dresses"
+    case shoes = "Shoes & Footwear"
+    case accessories = "Accessories"
+    case electronics = "Electronics"
+    case collectibles = "Collectibles"
+    case home = "Home & Garden"
+    case books = "Books"
+    case toys = "Toys & Games"
+    case sports = "Sports & Outdoors"
+    case other = "Other"
+    
+    var inventoryLetter: String {
+        switch self {
+        case .tshirts: return "A"
+        case .jackets: return "B"
+        case .jeans: return "C"
+        case .workPants: return "D"
+        case .dresses: return "E"
+        case .shoes: return "F"
+        case .accessories: return "G"
+        case .electronics: return "H"
+        case .collectibles: return "I"
+        case .home: return "J"
+        case .books: return "K"
+        case .toys: return "L"
+        case .sports: return "M"
+        case .other: return "Z"
+        }
+    }
+    
+    var storageTips: [String] {
+        switch self {
+        case .tshirts:
+            return ["Fold neatly", "Store flat to prevent wrinkles", "Group by size"]
+        case .jackets:
+            return ["Hang to prevent creasing", "Use garment bags", "Store in cool, dry place"]
+        case .jeans:
+            return ["Fold along seams", "Stack by size", "Keep heavy items separate"]
+        case .workPants:
+            return ["Hang or fold carefully", "Check for stains before storing", "Group by brand"]
+        case .dresses:
+            return ["Hang on padded hangers", "Use garment bags", "Store by length"]
+        case .shoes:
+            return ["Clean before storing", "Use shoe boxes", "Stuff with paper to maintain shape"]
+        case .accessories:
+            return ["Use small containers", "Keep sets together", "Protect delicate items"]
+        case .electronics:
+            return ["Original boxes preferred", "Anti-static bags", "Temperature controlled area"]
+        default:
+            return ["Handle with care", "Clean before storing", "Label clearly"]
+        }
+    }
+}
+
 enum SourceLocation: String, CaseIterable {
     case cityWalk = "City Walk"
     case goodwillBins = "Goodwill Bins"
@@ -219,7 +279,7 @@ enum SourceLocation: String, CaseIterable {
     }
 }
 
-// MARK: - Enhanced Analysis Models
+// MARK: - Analysis Models
 protocol ItemAnalysis {
     var itemName: String { get }
     var category: String { get }
@@ -233,7 +293,20 @@ protocol ItemAnalysis {
     var marketNotes: String { get }
 }
 
-struct EnhancedItemAnalysis: ItemAnalysis {
+struct BasicItemAnalysis: ItemAnalysis {
+    let itemName: String
+    let category: String
+    let suggestedPrice: Double
+    let confidence: Double
+    let ebayTitle: String
+    let description: String
+    let keywords: [String]
+    let condition: String
+    let resalePotential: Int
+    let marketNotes: String
+}
+
+struct ItemAnalysisResult: ItemAnalysis {
     let itemName: String
     let category: String
     let modelNumber: String
@@ -251,19 +324,6 @@ struct EnhancedItemAnalysis: ItemAnalysis {
     let competitionLevel: String
     let seasonalDemand: String
     let photosAnalyzed: Int
-}
-
-struct BasicItemAnalysis: ItemAnalysis {
-    let itemName: String
-    let category: String
-    let suggestedPrice: Double
-    let confidence: Double
-    let ebayTitle: String
-    let description: String
-    let keywords: [String]
-    let condition: String
-    let resalePotential: Int
-    let marketNotes: String
 }
 
 struct PriceRange {
@@ -285,7 +345,7 @@ struct ProspectAnalysis {
     let condition: String
     let confidence: Double
     let estimatedValue: Double
-    let maxPayPrice: Double        // 🎯 KEY: Max price you should pay
+    let maxPayPrice: Double        // Max price you should pay
     let potentialProfit: Double
     let expectedROI: Double
     let recommendation: ProspectDecision
@@ -304,6 +364,21 @@ struct ProspectAnalysis {
     let targetBuyPrice: Double     // Ideal purchase price for good profit
     let quickFlipPotential: Bool   // Can be sold quickly
     let holidayDemand: Bool        // Higher demand during holidays
+}
+
+// MARK: - Missing Types for RealAPIServices
+struct QuickIdentification {
+    let itemName: String
+    let brand: String
+    let condition: String
+    let confidence: Double
+}
+
+struct ProspectRecommendation {
+    let decision: ProspectDecision
+    let reasons: [String]
+    let riskLevel: String
+    let sourcingTips: [String]
 }
 
 enum ProspectDecision {
@@ -349,7 +424,7 @@ enum PhotoSource {
     case multiPhoto
 }
 
-// MARK: - Revolutionary Constants
+// MARK: - App Constants
 struct ResellAIConstants {
     static let maxPhotosPerItem = 8
     static let minConfidenceThreshold = 0.3
@@ -406,7 +481,7 @@ struct InventoryStatistics {
     }
 }
 
-// MARK: - Supporting API Data Models (CONSOLIDATED)
+// MARK: - API Data Models
 struct VisionAnalysisResults {
     let detectedCondition: String
     let conditionScore: Double
@@ -469,7 +544,7 @@ struct ProfitMargins {
     let maxProfitNet: Double
 }
 
-// MARK: - Revolutionary Analysis Results (CONSOLIDATED)
+// MARK: - Analysis Results
 struct RevolutionaryAnalysis {
     let itemName: String
     let brand: String
@@ -499,7 +574,7 @@ struct RevolutionaryAnalysis {
     let resalePotential: Int
     let images: [UIImage]
     
-    // ✅ NEW: Enhanced fields for ultra-specific analysis
+    // Product details
     let size: String
     let colorway: String
     let releaseYear: String
@@ -509,7 +584,7 @@ struct RevolutionaryAnalysis {
     let sizePopularity: String
     let barcode: String?
     
-    // Initialize with enhanced fields
+    // Initialize with product details
     init(itemName: String, brand: String, modelNumber: String, category: String, confidence: Double,
          actualCondition: String, conditionReasons: [String], conditionScore: Double,
          realisticPrice: Double, quickSalePrice: Double, maxProfitPrice: Double, marketRange: PriceRange,
@@ -558,7 +633,7 @@ struct RevolutionaryAnalysis {
     }
 }
 
-// ✅ NEW: Barcode Data Structure
+// MARK: - Barcode Data Structure
 struct BarcodeData {
     let upc: String
     let productName: String
@@ -587,44 +662,6 @@ struct MarketIntelligence {
     let topKeywords: [String]
     let pricingStrategy: String
     let listingTips: [String]
-}
-
-// MARK: - Automation Models
-struct AutoListingTemplate {
-    let category: String
-    let titleTemplate: String
-    let descriptionTemplate: String
-    let keywordTemplates: [String]
-    let pricingStrategy: String
-    let shippingSettings: String
-    let returnPolicy: String
-}
-
-// MARK: - Error Handling
-enum ResellAIError: Error, LocalizedError {
-    case invalidImage
-    case analysisTimeout
-    case networkError
-    case apiKeyMissing
-    case insufficientData
-    case cameraUnavailable
-    
-    var errorDescription: String? {
-        switch self {
-        case .invalidImage:
-            return "Invalid image format or size"
-        case .analysisTimeout:
-            return "Analysis timed out - please try again"
-        case .networkError:
-            return "Network connection error"
-        case .apiKeyMissing:
-            return "API key not configured"
-        case .insufficientData:
-            return "Insufficient data for analysis"
-        case .cameraUnavailable:
-            return "Camera not available"
-        }
-    }
 }
 
 // MARK: - Automation Models

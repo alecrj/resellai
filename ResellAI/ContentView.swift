@@ -3,32 +3,32 @@ import UIKit
 import AVFoundation
 import PhotosUI
 
-// MARK: - 🚀 FIXED MAIN CONTENT VIEW
+// MARK: - Main Content View
 struct ContentView: View {
     @StateObject private var inventoryManager = InventoryManager()
-    @StateObject private var revolutionaryAI = RevolutionaryAIService()
+    @StateObject private var aiService = RevolutionaryAIService()
     @StateObject private var googleSheetsService = EnhancedGoogleSheetsService()
     @StateObject private var ebayListingService = DirectEbayListingService()
     
-    // 🎯 HOMEPAGE MODE TOGGLE
+    // Homepage mode toggle
     @State private var isProspectingMode = false
     
     var body: some View {
         VStack(spacing: 0) {
-            // 🔥 HOMEPAGE MODE TOGGLE
-            HomepageModeToggle(isProspectingMode: $isProspectingMode)
+            // Homepage Mode Toggle
+            ModeToggleView(isProspectingMode: $isProspectingMode)
             
             // Main Content
             if isProspectingMode {
-                // 🔍 PROSPECTING MODE
-                ProspectingModeView()
+                // Prospecting Mode
+                ProspectingView()
                     .environmentObject(inventoryManager)
-                    .environmentObject(revolutionaryAI)
+                    .environmentObject(aiService)
             } else {
-                // 📦 BUSINESS MODE
-                BusinessModeTabView()
+                // Business Mode
+                BusinessTabView()
                     .environmentObject(inventoryManager)
-                    .environmentObject(revolutionaryAI)
+                    .environmentObject(aiService)
                     .environmentObject(googleSheetsService)
                     .environmentObject(ebayListingService)
             }
@@ -39,8 +39,8 @@ struct ContentView: View {
     }
 }
 
-// MARK: - 🎯 HOMEPAGE MODE TOGGLE
-struct HomepageModeToggle: View {
+// MARK: - Mode Toggle View
+struct ModeToggleView: View {
     @Binding var isProspectingMode: Bool
     
     var body: some View {
@@ -54,7 +54,7 @@ struct HomepageModeToggle: View {
             HStack(spacing: 0) {
                 // Business Mode Button
                 Button(action: {
-                    empireHaptic(.medium)
+                    hapticFeedback(.medium)
                     isProspectingMode = false
                 }) {
                     HStack {
@@ -71,7 +71,7 @@ struct HomepageModeToggle: View {
                 
                 // Prospecting Mode Button
                 Button(action: {
-                    empireHaptic(.medium)
+                    hapticFeedback(.medium)
                     isProspectingMode = true
                 }) {
                     HStack {
@@ -103,14 +103,14 @@ struct HomepageModeToggle: View {
     }
 }
 
-// MARK: - 📦 BUSINESS MODE TAB VIEW
-struct BusinessModeTabView: View {
+// MARK: - Business Tab View
+struct BusinessTabView: View {
     var body: some View {
         TabView {
-            RevolutionaryAnalysisView()
+            AIAnalysisView()
                 .tabItem {
                     Image(systemName: "brain.head.profile")
-                    Text("🚀 Launchpad")
+                    Text("🚀 Analysis")
                 }
             
             DashboardView()
@@ -119,13 +119,19 @@ struct BusinessModeTabView: View {
                     Text("📊 Dashboard")
                 }
             
-            InventoryView()
+            SmartInventoryListView()
                 .tabItem {
                     Image(systemName: "list.bullet")
                     Text("📦 Inventory")
                 }
             
-            RevolutionarySettingsView()
+            InventoryOrganizationView()
+                .tabItem {
+                    Image(systemName: "archivebox.fill")
+                    Text("🏷️ Organization")
+                }
+            
+            AppSettingsView()
                 .tabItem {
                     Image(systemName: "gear")
                     Text("⚙️ Settings")
@@ -135,10 +141,10 @@ struct BusinessModeTabView: View {
     }
 }
 
-// MARK: - 🚀 FIXED Revolutionary Analysis View
-struct RevolutionaryAnalysisView: View {
+// MARK: - AI Analysis View (Business Mode)
+struct AIAnalysisView: View {
     @EnvironmentObject var inventoryManager: InventoryManager
-    @EnvironmentObject var revolutionaryAI: RevolutionaryAIService
+    @EnvironmentObject var aiService: RevolutionaryAIService
     @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
     @EnvironmentObject var ebayListingService: DirectEbayListingService
     
@@ -155,7 +161,7 @@ struct RevolutionaryAnalysisView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Revolutionary Header
+                    // Header
                     VStack(spacing: 8) {
                         Text("🚀 AI ANALYSIS")
                             .font(.largeTitle)
@@ -167,17 +173,17 @@ struct RevolutionaryAnalysisView: View {
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                         
-                        // Analysis Progress - FIXED
-                        if revolutionaryAI.isAnalyzing {
+                        // Analysis Progress
+                        if aiService.isAnalyzing {
                             VStack(spacing: 8) {
-                                ProgressView(value: Double(revolutionaryAI.currentStep), total: Double(revolutionaryAI.totalSteps))
+                                ProgressView(value: Double(aiService.currentStep), total: Double(aiService.totalSteps))
                                     .progressViewStyle(LinearProgressViewStyle(tint: .blue))
                                 
-                                Text(revolutionaryAI.analysisProgress)
+                                Text(aiService.analysisProgress)
                                     .font(.caption)
                                     .foregroundColor(.blue)
                                 
-                                Text("Step \(revolutionaryAI.currentStep)/\(revolutionaryAI.totalSteps)")
+                                Text("Step \(aiService.currentStep)/\(aiService.totalSteps)")
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
@@ -187,28 +193,28 @@ struct RevolutionaryAnalysisView: View {
                         }
                     }
                     
-                    // FIXED Multi-Photo Interface
+                    // Photo Interface
                     if !capturedImages.isEmpty {
-                        FixedPhotoGallery(images: $capturedImages)
+                        PhotoGalleryView(images: $capturedImages)
                     } else {
-                        FixedPhotoPlaceholder {
+                        PhotoPlaceholderView {
                             showingMultiCamera = true
                         }
                     }
                     
-                    // FIXED Action Buttons with Barcode
-                    FixedActionButtons(
+                    // Action Buttons
+                    ActionButtonsView(
                         hasPhotos: !capturedImages.isEmpty,
-                        isAnalyzing: revolutionaryAI.isAnalyzing,
+                        isAnalyzing: aiService.isAnalyzing,
                         photoCount: capturedImages.count,
                         onTakePhotos: { showingMultiCamera = true },
                         onAddPhotos: { showingPhotoLibrary = true },
                         onBarcodeScan: { showingBarcodeLookup = true },
-                        onAnalyze: { analyzeWithRevolutionaryAI() },
+                        onAnalyze: { analyzeWithAI() },
                         onReset: { resetAnalysis() }
                     )
                     
-                    // Revolutionary Analysis Results
+                    // Analysis Results
                     if let result = analysisResult {
                         RevolutionaryAnalysisResultView(analysis: result) {
                             showingItemForm = true
@@ -224,13 +230,13 @@ struct RevolutionaryAnalysisView: View {
             .navigationBarHidden(true)
         }
         .sheet(isPresented: $showingMultiCamera) {
-            FixedCameraView { photos in
+            CameraView { photos in
                 capturedImages.append(contentsOf: photos)
                 analysisResult = nil
             }
         }
         .sheet(isPresented: $showingPhotoLibrary) {
-            FixedPhotoLibraryPicker { photos in
+            PhotoLibraryPicker { photos in
                 capturedImages.append(contentsOf: photos)
                 analysisResult = nil
             }
@@ -240,8 +246,8 @@ struct RevolutionaryAnalysisView: View {
                 RevolutionaryItemFormView(
                     analysis: result,
                     onSave: { item in
-                        inventoryManager.addItem(item)
-                        googleSheetsService.uploadItem(item)
+                        let savedItem = inventoryManager.addItem(item)
+                        googleSheetsService.uploadItem(savedItem)
                         showingItemForm = false
                         resetAnalysis()
                     }
@@ -265,11 +271,11 @@ struct RevolutionaryAnalysisView: View {
         }
     }
     
-    private func analyzeWithRevolutionaryAI() {
+    private func analyzeWithAI() {
         guard !capturedImages.isEmpty else { return }
         
-        empireHaptic(.medium)
-        revolutionaryAI.revolutionaryAnalysis(capturedImages) { result in
+        hapticFeedback(.medium)
+        aiService.revolutionaryAnalysis(capturedImages) { result in
             DispatchQueue.main.async {
                 analysisResult = result
             }
@@ -277,8 +283,8 @@ struct RevolutionaryAnalysisView: View {
     }
     
     private func analyzeBarcode(_ barcode: String) {
-        empireHaptic(.success)
-        revolutionaryAI.analyzeBarcode(barcode, images: capturedImages) { result in
+        hapticFeedback(.success)
+        aiService.analyzeBarcode(barcode, images: capturedImages) { result in
             DispatchQueue.main.async {
                 analysisResult = result
             }
@@ -286,16 +292,16 @@ struct RevolutionaryAnalysisView: View {
     }
     
     private func resetAnalysis() {
-        empireHaptic(.light)
+        hapticFeedback(.light)
         capturedImages = []
         analysisResult = nil
     }
 }
 
-// MARK: - 🔍 PROSPECTING MODE VIEW (CLEAN VERSION)
-struct ProspectingModeView: View {
+// MARK: - Prospecting View
+struct ProspectingView: View {
     @EnvironmentObject var inventoryManager: InventoryManager
-    @EnvironmentObject var revolutionaryAI: RevolutionaryAIService
+    @EnvironmentObject var aiService: RevolutionaryAIService
     
     @State private var capturedImages: [UIImage] = []
     @State private var showingMultiCamera = false
@@ -311,7 +317,7 @@ struct ProspectingModeView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    // 🔍 Prospecting Header
+                    // Prospecting Header
                     VStack(spacing: 12) {
                         Text("🔍 PROSPECTING MODE")
                             .font(.largeTitle)
@@ -325,16 +331,16 @@ struct ProspectingModeView: View {
                     }
                     
                     // Analysis Progress
-                    if revolutionaryAI.isAnalyzing {
+                    if aiService.isAnalyzing {
                         VStack(spacing: 12) {
-                            ProgressView(value: Double(revolutionaryAI.currentStep), total: Double(revolutionaryAI.totalSteps))
+                            ProgressView(value: Double(aiService.currentStep), total: Double(aiService.totalSteps))
                                 .progressViewStyle(LinearProgressViewStyle(tint: .purple))
                             
-                            Text(revolutionaryAI.analysisProgress)
+                            Text(aiService.analysisProgress)
                                 .font(.caption)
                                 .foregroundColor(.purple)
                             
-                            Text("Prospecting Analysis: Step \(revolutionaryAI.currentStep)/\(revolutionaryAI.totalSteps)")
+                            Text("Prospecting Analysis: Step \(aiService.currentStep)/\(aiService.totalSteps)")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -345,9 +351,9 @@ struct ProspectingModeView: View {
                     
                     // Photo Interface
                     if !capturedImages.isEmpty {
-                        FixedPhotoGallery(images: $capturedImages)
+                        PhotoGalleryView(images: $capturedImages)
                     } else {
-                        ProspectingPhotoPlaceholder {
+                        ProspectingPhotoPlaceholderView {
                             showingMultiCamera = true
                         }
                     }
@@ -356,7 +362,7 @@ struct ProspectingModeView: View {
                     VStack(spacing: 15) {
                         // Take Photos Button
                         Button(action: {
-                            empireHaptic(.medium)
+                            hapticFeedback(.medium)
                             showingMultiCamera = true
                         }) {
                             HStack {
@@ -385,7 +391,7 @@ struct ProspectingModeView: View {
                         
                         // Add from Library Button
                         Button(action: {
-                            empireHaptic(.medium)
+                            hapticFeedback(.medium)
                             showingPhotoLibrary = true
                         }) {
                             HStack {
@@ -414,7 +420,7 @@ struct ProspectingModeView: View {
                         
                         // Barcode Lookup Button
                         Button(action: {
-                            empireHaptic(.medium)
+                            hapticFeedback(.medium)
                             showingBarcodeLookup = true
                         }) {
                             HStack {
@@ -444,7 +450,7 @@ struct ProspectingModeView: View {
                         // Analyze Photos Button
                         if !capturedImages.isEmpty {
                             Button(action: {
-                                empireHaptic(.heavy)
+                                hapticFeedback(.heavy)
                                 analyzeForMaxBuyPrice()
                             }) {
                                 HStack {
@@ -465,7 +471,7 @@ struct ProspectingModeView: View {
                                 .cornerRadius(12)
                                 .shadow(radius: 5)
                             }
-                            .disabled(revolutionaryAI.isAnalyzing)
+                            .disabled(aiService.isAnalyzing)
                         }
                     }
                     
@@ -481,13 +487,13 @@ struct ProspectingModeView: View {
             .navigationBarHidden(true)
         }
         .sheet(isPresented: $showingMultiCamera) {
-            FixedCameraView { photos in
+            CameraView { photos in
                 capturedImages.append(contentsOf: photos)
                 prospectAnalysis = nil
             }
         }
         .sheet(isPresented: $showingPhotoLibrary) {
-            FixedPhotoLibraryPicker { photos in
+            PhotoLibraryPicker { photos in
                 capturedImages.append(contentsOf: photos)
                 prospectAnalysis = nil
             }
@@ -505,8 +511,7 @@ struct ProspectingModeView: View {
     private func analyzeForMaxBuyPrice() {
         guard !capturedImages.isEmpty else { return }
         
-        // 🎯 PROSPECTING MODE
-        revolutionaryAI.analyzeForProspecting(
+        aiService.analyzeForProspecting(
             images: capturedImages,
             category: selectedCategory
         ) { analysis in
@@ -517,8 +522,8 @@ struct ProspectingModeView: View {
     }
     
     private func lookupBarcode(_ barcode: String) {
-        empireHaptic(.success)
-        revolutionaryAI.lookupBarcodeForProspecting(barcode) { analysis in
+        hapticFeedback(.success)
+        aiService.lookupBarcodeForProspecting(barcode) { analysis in
             DispatchQueue.main.async {
                 prospectAnalysis = analysis
             }
@@ -526,10 +531,137 @@ struct ProspectingModeView: View {
     }
 }
 
-// MARK: - 🔧 FIXED UI COMPONENTS
+// MARK: - Smart Inventory List View
+struct SmartInventoryListView: View {
+    @EnvironmentObject var inventoryManager: InventoryManager
+    @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
+    @State private var searchText = ""
+    @State private var filterStatus: ItemStatus?
+    @State private var showingFilters = false
+    @State private var showingBarcodeLookup = false
+    @State private var scannedBarcode: String?
+    @State private var selectedItem: InventoryItem?
+    @State private var showingAutoListing = false
+    
+    var filteredItems: [InventoryItem] {
+        inventoryManager.items
+            .filter { item in
+                if let status = filterStatus {
+                    return item.status == status
+                }
+                return true
+            }
+            .filter { item in
+                if searchText.isEmpty {
+                    return true
+                }
+                return item.name.localizedCaseInsensitiveContains(searchText) ||
+                       item.source.localizedCaseInsensitiveContains(searchText) ||
+                       item.inventoryCode.localizedCaseInsensitiveContains(searchText)
+            }
+    }
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                // Smart Search Bar with Barcode Scanner
+                HStack {
+                    SearchBarView(text: $searchText)
+                    
+                    Button(action: {
+                        hapticFeedback(.light)
+                        showingBarcodeLookup = true
+                    }) {
+                        Image(systemName: "barcode.viewfinder")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                            .padding(.trailing, 8)
+                    }
+                }
+                
+                List {
+                    ForEach(filteredItems) { item in
+                        SmartInventoryItemRowView(item: item) { updatedItem in
+                            inventoryManager.updateItem(updatedItem)
+                            googleSheetsService.updateItem(updatedItem)
+                        } onAutoList: { item in
+                            selectedItem = item
+                            showingAutoListing = true
+                        }
+                    }
+                    .onDelete(perform: deleteItems)
+                }
+            }
+            .navigationTitle("Smart Inventory")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button("All Items") {
+                            hapticFeedback(.light)
+                            filterStatus = nil
+                        }
+                        ForEach(ItemStatus.allCases, id: \.self) { status in
+                            Button(status.rawValue) {
+                                hapticFeedback(.light)
+                                filterStatus = status
+                            }
+                        }
+                        Divider()
+                        Button("📊 Export to CSV") {
+                            hapticFeedback(.medium)
+                            exportToCSV()
+                        }
+                        Button("🔄 Sync to Google Sheets") {
+                            hapticFeedback(.medium)
+                            googleSheetsService.syncAllItems(inventoryManager.items)
+                        }
+                    } label: {
+                        Image(systemName: "line.horizontal.3.decrease.circle")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingBarcodeLookup) {
+            BarcodeScannerView(scannedCode: $scannedBarcode)
+                .onDisappear {
+                    if let barcode = scannedBarcode {
+                        lookupItemByBarcode(barcode: barcode)
+                    }
+                }
+        }
+        .sheet(isPresented: $showingAutoListing) {
+            if let item = selectedItem {
+                AutoListingView(item: item)
+            }
+        }
+    }
+    
+    private func deleteItems(offsets: IndexSet) {
+        hapticFeedback(.medium)
+        inventoryManager.deleteItems(at: offsets, from: filteredItems)
+    }
+    
+    private func exportToCSV() {
+        let csv = inventoryManager.exportCSV()
+        print("📄 CSV Export generated with smart inventory codes")
+    }
+    
+    private func lookupItemByBarcode(barcode: String) {
+        hapticFeedback(.success)
+        // Find item by barcode or inventory code
+        if let item = inventoryManager.findItem(byInventoryCode: barcode) {
+            selectedItem = item
+            showingAutoListing = true
+        } else {
+            print("🔍 Item not found with code: \(barcode)")
+        }
+    }
+}
 
-// FIXED Photo Placeholder
-struct FixedPhotoPlaceholder: View {
+// MARK: - UI Components
+
+// Photo Placeholder
+struct PhotoPlaceholderView: View {
     let onTakePhotos: () -> Void
     
     var body: some View {
@@ -545,7 +677,7 @@ struct FixedPhotoPlaceholder: View {
                 .frame(height: 300)
             
             VStack(spacing: 20) {
-                Image(systemName: "camera.fill") // FIXED: Valid SF Symbol
+                Image(systemName: "camera.fill")
                     .font(.system(size: 60))
                     .foregroundColor(.blue)
                 
@@ -572,14 +704,14 @@ struct FixedPhotoPlaceholder: View {
             }
         }
         .onTapGesture {
-            empireHaptic(.light)
+            hapticFeedback(.light)
             onTakePhotos()
         }
     }
 }
 
 // Prospecting Photo Placeholder
-struct ProspectingPhotoPlaceholder: View {
+struct ProspectingPhotoPlaceholderView: View {
     let onTakePhotos: () -> Void
     
     var body: some View {
@@ -622,14 +754,14 @@ struct ProspectingPhotoPlaceholder: View {
             }
         }
         .onTapGesture {
-            empireHaptic(.light)
+            hapticFeedback(.light)
             onTakePhotos()
         }
     }
 }
 
-// FIXED Photo Gallery
-struct FixedPhotoGallery: View {
+// Photo Gallery
+struct PhotoGalleryView: View {
     @Binding var images: [UIImage]
     @State private var selectedIndex = 0
     
@@ -664,7 +796,7 @@ struct FixedPhotoGallery: View {
                 Spacer()
                 
                 Button(action: {
-                    empireHaptic(.light)
+                    hapticFeedback(.light)
                     deleteCurrentPhoto()
                 }) {
                     Image(systemName: "trash")
@@ -691,8 +823,8 @@ struct FixedPhotoGallery: View {
     }
 }
 
-// FIXED Action Buttons with Barcode Support
-struct FixedActionButtons: View {
+// Action Buttons
+struct ActionButtonsView: View {
     let hasPhotos: Bool
     let isAnalyzing: Bool
     let photoCount: Int
@@ -708,7 +840,7 @@ struct FixedActionButtons: View {
             HStack(spacing: 10) {
                 // Take Photos Button
                 Button(action: {
-                    empireHaptic(.medium)
+                    hapticFeedback(.medium)
                     onTakePhotos()
                 }) {
                     HStack {
@@ -725,7 +857,7 @@ struct FixedActionButtons: View {
                 
                 // Add Photos Button
                 Button(action: {
-                    empireHaptic(.medium)
+                    hapticFeedback(.medium)
                     onAddPhotos()
                 }) {
                     HStack {
@@ -742,7 +874,7 @@ struct FixedActionButtons: View {
                 
                 // Barcode Scanner Button
                 Button(action: {
-                    empireHaptic(.medium)
+                    hapticFeedback(.medium)
                     onBarcodeScan()
                 }) {
                     HStack {
@@ -761,7 +893,7 @@ struct FixedActionButtons: View {
             // Analysis Button
             if hasPhotos {
                 Button(action: {
-                    empireHaptic(.heavy)
+                    hapticFeedback(.heavy)
                     onAnalyze()
                 }) {
                     HStack {
@@ -794,7 +926,7 @@ struct FixedActionButtons: View {
                 // Reset Button
                 if !isAnalyzing {
                     Button(action: {
-                        empireHaptic(.light)
+                        hapticFeedback(.light)
                         onReset()
                     }) {
                         HStack {
@@ -813,209 +945,210 @@ struct FixedActionButtons: View {
     }
 }
 
-// MARK: - 🔧 FIXED CAMERA AND PHOTO PICKERS
-
-// FIXED Camera View
-struct FixedCameraView: UIViewControllerRepresentable {
-    let onPhotosSelected: ([UIImage]) -> Void
+// Search Bar
+struct SearchBarView: View {
+    @Binding var text: String
     
-    func makeUIViewController(context: Context) -> FixedCameraViewController {
-        let controller = FixedCameraViewController()
-        controller.delegate = context.coordinator
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: FixedCameraViewController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, FixedCameraDelegate {
-        let parent: FixedCameraView
-        
-        init(_ parent: FixedCameraView) {
-            self.parent = parent
+    var body: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+            
+            TextField("Search by name, code, or source...", text: $text)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
         }
-        
-        func didCapturePhotos(_ photos: [UIImage]) {
-            parent.onPhotosSelected(photos)
-        }
+        .padding(.horizontal)
     }
 }
 
-protocol FixedCameraDelegate: AnyObject {
-    func didCapturePhotos(_ photos: [UIImage])
-}
-
-class FixedCameraViewController: UIViewController {
-    weak var delegate: FixedCameraDelegate?
-    private var capturedPhotos: [UIImage] = []
-    private let maxPhotos = 8
+// Smart Inventory Item Row
+struct SmartInventoryItemRowView: View {
+    let item: InventoryItem
+    let onUpdate: (InventoryItem) -> Void
+    let onAutoList: (InventoryItem) -> Void
+    @State private var showingDetail = false
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupInterface()
-    }
-    
-    private func setupInterface() {
-        view.backgroundColor = .systemBackground
-        
-        let titleLabel = UILabel()
-        titleLabel.text = "📸 Take Photos (0/\(maxPhotos))"
-        titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textAlignment = .center
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(titleLabel)
-        
-        let instructionLabel = UILabel()
-        instructionLabel.text = "Take multiple angles for best analysis"
-        instructionLabel.font = .systemFont(ofSize: 16)
-        instructionLabel.textAlignment = .center
-        instructionLabel.textColor = .systemGray
-        instructionLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(instructionLabel)
-        
-        let cameraButton = UIButton(type: .system)
-        cameraButton.setTitle("📷 Take Photo", for: .normal)
-        cameraButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        cameraButton.backgroundColor = .systemBlue
-        cameraButton.setTitleColor(.white, for: .normal)
-        cameraButton.layer.cornerRadius = 12
-        cameraButton.translatesAutoresizingMaskIntoConstraints = false
-        cameraButton.addTarget(self, action: #selector(takePhoto), for: .touchUpInside)
-        view.addSubview(cameraButton)
-        
-        let doneButton = UIButton(type: .system)
-        doneButton.setTitle("✅ Done", for: .normal)
-        doneButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        doneButton.backgroundColor = .systemGreen
-        doneButton.setTitleColor(.white, for: .normal)
-        doneButton.layer.cornerRadius = 12
-        doneButton.translatesAutoresizingMaskIntoConstraints = false
-        doneButton.addTarget(self, action: #selector(finishCapture), for: .touchUpInside)
-        view.addSubview(doneButton)
-        
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+    var body: some View {
+        HStack {
+            if let imageData = item.imageData, let uiImage = UIImage(data: imageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 60, height: 60)
+                    .cornerRadius(8)
+            }
             
-            instructionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
-            instructionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            cameraButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            cameraButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            cameraButton.widthAnchor.constraint(equalToConstant: 200),
-            cameraButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            doneButton.topAnchor.constraint(equalTo: cameraButton.bottomAnchor, constant: 20),
-            doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            doneButton.widthAnchor.constraint(equalToConstant: 200),
-            doneButton.heightAnchor.constraint(equalToConstant: 50)
-        ])
-    }
-    
-    @objc private func takePhoto() {
-        guard capturedPhotos.count < maxPhotos else {
-            let alert = UIAlertController(title: "Max Photos Reached", message: "You can take up to \(maxPhotos) photos.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-            return
-        }
-        
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = self
-        present(picker, animated: true)
-    }
-    
-    @objc private func finishCapture() {
-        if !capturedPhotos.isEmpty {
-            delegate?.didCapturePhotos(capturedPhotos)
-            dismiss(animated: true)
-        } else {
-            let alert = UIAlertController(title: "No Photos", message: "Please take at least one photo.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-        }
-    }
-    
-    private func updateUI() {
-        if let titleLabel = view.subviews.compactMap({ $0 as? UILabel }).first {
-            titleLabel.text = "📸 Take Photos (\(capturedPhotos.count)/\(maxPhotos))"
-        }
-    }
-}
-
-extension FixedCameraViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        if let image = info[.originalImage] as? UIImage {
-            capturedPhotos.append(image)
-            updateUI()
-        }
-        picker.dismiss(animated: true)
-    }
-}
-
-// FIXED Photo Library Picker
-struct FixedPhotoLibraryPicker: UIViewControllerRepresentable {
-    let onPhotosSelected: ([UIImage]) -> Void
-    
-    func makeUIViewController(context: Context) -> PHPickerViewController {
-        var config = PHPickerConfiguration()
-        config.filter = .images
-        config.selectionLimit = 8
-        
-        let picker = PHPickerViewController(configuration: config)
-        picker.delegate = context.coordinator
-        return picker
-    }
-    
-    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, PHPickerViewControllerDelegate {
-        let parent: FixedPhotoLibraryPicker
-        
-        init(_ parent: FixedPhotoLibraryPicker) {
-            self.parent = parent
-        }
-        
-        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-            picker.dismiss(animated: true)
-            
-            var images: [UIImage] = []
-            let group = DispatchGroup()
-            
-            for result in results {
-                group.enter()
-                result.itemProvider.loadObject(ofClass: UIImage.self) { image, error in
-                    if let image = image as? UIImage {
-                        images.append(image)
+            VStack(alignment: .leading, spacing: 4) {
+                // Smart Inventory Code Display
+                Text(item.inventoryCode.isEmpty ? "No Code" : item.inventoryCode)
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(item.inventoryCode.isEmpty ? .red : .blue)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(item.inventoryCode.isEmpty ? Color.red.opacity(0.1) : Color.blue.opacity(0.1))
+                    .cornerRadius(4)
+                
+                Text(item.name)
+                    .font(.headline)
+                    .lineLimit(2)
+                
+                HStack {
+                    Text("\(item.source) • $\(String(format: "%.2f", item.purchasePrice))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    if !item.storageLocation.isEmpty {
+                        Text("📍 \(item.storageLocation)")
+                            .font(.caption)
+                            .foregroundColor(.green)
                     }
-                    group.leave()
+                }
+                
+                if item.profit > 0 {
+                    Text("Profit: $\(String(format: "%.2f", item.profit)) (\(String(format: "%.1f", item.roi))%)")
+                        .font(.caption)
+                        .foregroundColor(.green)
                 }
             }
             
-            group.notify(queue: .main) {
-                self.parent.onPhotosSelected(images)
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 8) {
+                Text(item.status.rawValue)
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(item.status.color.opacity(0.2))
+                    .foregroundColor(item.status.color)
+                    .cornerRadius(12)
+                
+                // Auto-List Button
+                Button(action: {
+                    hapticFeedback(.light)
+                    onAutoList(item)
+                }) {
+                    Image(systemName: "wand.and.stars")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+                
+                Text("#\(item.itemNumber)")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            hapticFeedback(.light)
+            showingDetail = true
+        }
+        .sheet(isPresented: $showingDetail) {
+            ItemDetailView(item: item, onUpdate: onUpdate)
         }
     }
 }
 
-// MARK: - 🔧 HAPTIC FEEDBACK (SINGLE DEFINITION)
-func empireHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-    let impactFeedback = UIImpactFeedbackGenerator(style: style)
-    impactFeedback.impactOccurred()
+// Settings View
+struct AppSettingsView: View {
+    @EnvironmentObject var aiService: RevolutionaryAIService
+    @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
+    @EnvironmentObject var ebayListingService: DirectEbayListingService
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("🚀 AI Analysis") {
+                    HStack {
+                        Image(systemName: "brain.head.profile")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading) {
+                            Text("AI Analysis Engine")
+                                .fontWeight(.semibold)
+                            Text("Ultra-accurate • Real market data • Computer vision")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                        Spacer()
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                }
+                
+                Section("🚀 Direct eBay Listing") {
+                    HStack {
+                        Image(systemName: "bolt.fill")
+                            .foregroundColor(.green)
+                        VStack(alignment: .leading) {
+                            Text("One-Tap eBay Listing")
+                                .fontWeight(.semibold)
+                            Text(ebayListingService.isListing ? "Listing in progress..." : "Ready to list")
+                                .font(.caption)
+                                .foregroundColor(ebayListingService.isListing ? .orange : .green)
+                        }
+                        Spacer()
+                        if ebayListingService.isListing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                
+                Section("📊 Google Sheets") {
+                    HStack {
+                        Image(systemName: "tablecells")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading) {
+                            Text("Auto-Sync Inventory")
+                                .fontWeight(.semibold)
+                            Text(googleSheetsService.syncStatus)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        if googleSheetsService.isSyncing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                
+                Section("🔥 Features") {
+                    FeatureStatusRowView(icon: "camera.fill", title: "Multi-Photo Analysis", enabled: true)
+                    FeatureStatusRowView(icon: "eye.fill", title: "Computer Vision", enabled: true)
+                    FeatureStatusRowView(icon: "chart.line.uptrend.xyaxis", title: "Real-Time Market Research", enabled: true)
+                    FeatureStatusRowView(icon: "brain", title: "AI Pricing", enabled: true)
+                    FeatureStatusRowView(icon: "bolt.fill", title: "Direct eBay Listing", enabled: true)
+                    FeatureStatusRowView(icon: "magnifyingglass.circle", title: "Prospecting Mode", enabled: true)
+                    FeatureStatusRowView(icon: "barcode.viewfinder", title: "Barcode Scanner", enabled: true)
+                    FeatureStatusRowView(icon: "archivebox.fill", title: "Smart Inventory Codes", enabled: true)
+                }
+            }
+            .navigationTitle("Settings")
+        }
+    }
 }
 
-// MARK: - Preview
+struct FeatureStatusRowView: View {
+    let icon: String
+    let title: String
+    let enabled: Bool
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+            Text(title)
+            Spacer()
+            Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundColor(enabled ? .green : .red)
+        }
+    }
+}
+
+// ContentView.swift - Main app interface (hapticFeedback will be in UIComponents.swift)
+
+// Preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()

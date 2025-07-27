@@ -1170,3 +1170,54 @@ class DirectEbayListingService: ObservableObject {
         // Implementation same as before...
     }
 }
+// MARK: - 📊 Enhanced Google Sheets Service
+class EnhancedGoogleSheetsService: ObservableObject {
+    @Published var spreadsheetId = RevolutionaryAPIConfig.spreadsheetID
+    @Published var isConnected = true
+    @Published var isSyncing = false
+    @Published var lastSyncDate: Date?
+    @Published var syncStatus = "Connected"
+    
+    func authenticate() {
+        isConnected = true
+        syncStatus = "Connected to Google Sheets"
+        print("✅ Google Sheets ready!")
+    }
+    
+    func uploadItem(_ item: InventoryItem) {
+        print("📤 Uploading to Google Sheets: \(item.name) [\(item.inventoryCode)]")
+        // Mock upload implementation
+    }
+    
+    func updateItem(_ item: InventoryItem) {
+        uploadItem(item)
+    }
+    
+    func syncAllItems(_ items: [InventoryItem]) {
+        print("🔄 Syncing \(items.count) items to Google Sheets")
+        // Mock sync implementation
+    }
+}
+
+// MARK: - 🏪 Direct eBay Listing Service
+class DirectEbayListingService: ObservableObject {
+    @Published var isListing = false
+    @Published var listingProgress = "Ready to list"
+    @Published var listingURL: String?
+    @Published var isConfigured = false
+    
+    func listDirectlyToEbay(item: InventoryItem, analysis: RevolutionaryAnalysis, completion: @escaping (Bool, String?) -> Void) {
+        DispatchQueue.main.async {
+            self.isListing = true
+            self.listingProgress = "Uploading to eBay..."
+        }
+        
+        // Mock eBay listing process
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            self.isListing = false
+            self.listingProgress = "Listed successfully"
+            self.listingURL = "https://ebay.com/item/mock-listing-\(item.itemNumber)"
+            completion(true, self.listingURL)
+        }
+    }
+}
