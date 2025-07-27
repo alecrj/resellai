@@ -10,18 +10,19 @@ struct RevolutionaryAPIConfig {
     static let openAIEndpoint = "https://api.openai.com/v1/chat/completions"
     static let googleAppsScriptURL = "https://script.google.com/macros/s/AKfycbztiFfbkCag9QghCX6nTmqI27LgtRSQZPgV4VvJJIMOiepedYlRvRnjhyF0x6i-sS_4Ew/exec"
     
-    // 🚀 RAPIDAPI CONFIGURATION FOR MARKET RESEARCH
-    static let rapidAPIKey = "YOUR_RAPIDAPI_KEY_HERE" // From rapidapi.com
-    static let rapidAPIHost = "ebay-price-scraper.p.rapidapi.com"
-    
-    // 📊 TERAPEAK API (eBay's Official Analytics - $30/month)
-    static let terapeakAPIKey = "YOUR_TERAPEAK_KEY_HERE"
-    
-    // 🏪 EBAY DIRECT LISTING API (Free eBay Developer Account)
-    static let ebayAppID = "YOUR_EBAY_APP_ID"
-    static let ebayDevID = "YOUR_EBAY_DEV_ID"
-    static let ebayCertID = "YOUR_EBAY_CERT_ID"
-    static let ebayToken = "YOUR_EBAY_USER_TOKEN"
+    // 🚀 REAL RAPIDAPI CONFIGURATION FROM YOUR SCREENSHOT
+        static let rapidAPIKey = "490c86ec17msh2dc05730fae7290p198ab5jsn972047a484fa"
+        static let rapidAPIHost = "ebay-data-scraper.p.rapidapi.com"
+        
+        // 📊 TERAPEAK API (eBay's Official Analytics - $30/month)
+        static let terapeakAPIKey = "YOUR_TERAPEAK_KEY_HERE"
+        
+        // 🏪 EBAY DIRECT LISTING API (Free eBay Developer Account)
+        static let ebayAppID = "YOUR_EBAY_APP_ID"
+        static let ebayDevID = "YOUR_EBAY_DEV_ID"
+        static let ebayCertID = "YOUR_EBAY_CERT_ID"
+        static let ebayToken = "YOUR_EBAY_USER_TOKEN"
+
 }
 
 // MARK: - 🚀 Revolutionary AI Service (FIXED NAMES & ERRORS)
@@ -945,141 +946,6 @@ class DirectEbayListingService: ObservableObject {
         // Real implementation would use eBay Trading API
         // This is a simulation for now
         print("🏪 Creating real eBay listing for: \(item.name)")
-    }
-}
-
-// MARK: - Multi-Camera View (MISSING FROM CONTENTVIEW)
-struct MultiCameraViewRepresentable: UIViewControllerRepresentable {
-    let onPhotosSelected: ([UIImage]) -> Void
-    
-    func makeUIViewController(context: Context) -> MultiCameraViewController {
-        let controller = MultiCameraViewController()
-        controller.delegate = context.coordinator
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: MultiCameraViewController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, MultiCameraDelegate {
-        let parent: MultiCameraViewRepresentable
-        
-        init(_ parent: MultiCameraViewRepresentable) {
-            self.parent = parent
-        }
-        
-        func didCapturePhotos(_ photos: [UIImage]) {
-            parent.onPhotosSelected(photos)
-        }
-    }
-}
-
-// MARK: - Multi-Camera Controller Protocol & Class
-protocol MultiCameraDelegate: AnyObject {
-    func didCapturePhotos(_ photos: [UIImage])
-}
-
-class MultiCameraViewController: UIViewController {
-    weak var delegate: MultiCameraDelegate?
-    private var capturedPhotos: [UIImage] = []
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupMultiCameraInterface()
-    }
-    
-    private func setupMultiCameraInterface() {
-        view.backgroundColor = .systemBackground
-        
-        // Add multi-camera interface
-        let titleLabel = UILabel()
-        titleLabel.text = "📸 Multi-Photo Capture"
-        titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textAlignment = .center
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(titleLabel)
-        
-        let instructionLabel = UILabel()
-        instructionLabel.text = "Take multiple angles for the most accurate analysis"
-        instructionLabel.font = .systemFont(ofSize: 16)
-        instructionLabel.textAlignment = .center
-        instructionLabel.textColor = .systemGray
-        instructionLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(instructionLabel)
-        
-        let cameraButton = UIButton(type: .system)
-        cameraButton.setTitle("📷 Take Photo", for: .normal)
-        cameraButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        cameraButton.backgroundColor = .systemBlue
-        cameraButton.setTitleColor(.white, for: .normal)
-        cameraButton.layer.cornerRadius = 12
-        cameraButton.translatesAutoresizingMaskIntoConstraints = false
-        cameraButton.addTarget(self, action: #selector(takePhoto), for: .touchUpInside)
-        view.addSubview(cameraButton)
-        
-        let doneButton = UIButton(type: .system)
-        doneButton.setTitle("✅ Done (\(capturedPhotos.count) photos)", for: .normal)
-        doneButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        doneButton.backgroundColor = .systemGreen
-        doneButton.setTitleColor(.white, for: .normal)
-        doneButton.layer.cornerRadius = 12
-        doneButton.translatesAutoresizingMaskIntoConstraints = false
-        doneButton.addTarget(self, action: #selector(finishCapture), for: .touchUpInside)
-        view.addSubview(doneButton)
-        
-        // Layout constraints
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            instructionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
-            instructionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            cameraButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            cameraButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            cameraButton.widthAnchor.constraint(equalToConstant: 200),
-            cameraButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            doneButton.topAnchor.constraint(equalTo: cameraButton.bottomAnchor, constant: 20),
-            doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            doneButton.widthAnchor.constraint(equalToConstant: 200),
-            doneButton.heightAnchor.constraint(equalToConstant: 50)
-        ])
-    }
-    
-    @objc private func takePhoto() {
-        // Present camera
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = self
-        present(picker, animated: true)
-    }
-    
-    @objc private func finishCapture() {
-        if !capturedPhotos.isEmpty {
-            delegate?.didCapturePhotos(capturedPhotos)
-            dismiss(animated: true)
-        }
-    }
-}
-
-// MARK: - Camera Delegate
-extension MultiCameraViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        if let image = info[.originalImage] as? UIImage {
-            capturedPhotos.append(image)
-            
-            // Update done button text
-            if let doneButton = view.subviews.compactMap({ $0 as? UIButton }).last {
-                doneButton.setTitle("✅ Done (\(capturedPhotos.count) photos)", for: .normal)
-            }
-        }
-        picker.dismiss(animated: true)
     }
 }
 

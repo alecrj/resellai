@@ -5,7 +5,6 @@
 //  Created by Alec on 7/26/25.
 //
 
-
 import SwiftUI
 import Foundation
 
@@ -184,93 +183,5 @@ struct InventoryStatistics {
     
     var potentialProfit: Double {
         estimatedValue - totalInvestment - (estimatedValue * 0.13) // Minus fees
-    }
-}
-
-// MARK: - Supporting Views
-struct StatCard: View {
-    let title: String
-    let value: String
-    let color: Color
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            Text(value)
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(color)
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(minHeight: 80)
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(color.opacity(0.1))
-        )
-    }
-}
-
-struct FinancialCard: View {
-    let title: String
-    let amount: Double
-    let color: Color
-    let isPercentage: Bool
-    
-    init(title: String, amount: Double, color: Color, isPercentage: Bool = false) {
-        self.title = title
-        self.amount = amount
-        self.color = color
-        self.isPercentage = isPercentage
-    }
-    
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                if isPercentage {
-                    Text("\(amount, specifier: "%.1f")%")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(color)
-                } else {
-                    Text("$\(amount, specifier: "%.2f")")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(color)
-                }
-            }
-            
-            Spacer()
-            
-            Image(systemName: getIconName())
-                .font(.largeTitle)
-                .foregroundColor(color.opacity(0.6))
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(color.opacity(0.1))
-        )
-    }
-    
-    private func getIconName() -> String {
-        switch title {
-        case "Total Investment":
-            return "dollarsign.circle"
-        case "Total Profit":
-            return "chart.line.uptrend.xyaxis"
-        case "Average ROI":
-            return "percent"
-        default:
-            return "chart.bar"
-        }
     }
 }
