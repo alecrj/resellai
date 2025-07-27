@@ -1,18 +1,17 @@
 //
-//  RevolutionaryAnalysisResultView.swift
+//  AnalysisResultViews.swift
 //  ResellAI
 //
 //  Created by Alec on 7/27/25.
 //
-
 
 import SwiftUI
 
 // MARK: - Analysis Result Views
 
 // MARK: - Analysis Result View
-struct RevolutionaryAnalysisResultView: View {
-    let analysis: RevolutionaryAnalysis
+struct AnalysisResultView: View {
+    let analysis: AnalysisResult
     let onAddToInventory: () -> Void
     let onDirectList: () -> Void
     
@@ -105,7 +104,7 @@ struct RevolutionaryAnalysisResultView: View {
             // Action Buttons
             VStack(spacing: 12) {
                 Button(action: {
-                    empireHaptic(.medium)
+                    hapticFeedback(.medium)
                     onAddToInventory()
                 }) {
                     HStack {
@@ -127,7 +126,7 @@ struct RevolutionaryAnalysisResultView: View {
                 }
                 
                 Button(action: {
-                    empireHaptic(.medium)
+                    hapticFeedback(.medium)
                     onDirectList()
                 }) {
                     HStack {
@@ -175,7 +174,7 @@ struct RevolutionaryAnalysisResultView: View {
 
 // MARK: - Pricing Strategy Card
 struct PricingStrategyCard: View {
-    let analysis: RevolutionaryAnalysis
+    let analysis: AnalysisResult
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -279,7 +278,7 @@ struct PriceCard: View {
 
 // MARK: - Market Intelligence Card
 struct MarketIntelligenceCard: View {
-    let analysis: RevolutionaryAnalysis
+    let analysis: AnalysisResult
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -389,8 +388,8 @@ struct MarketStatCard: View {
 }
 
 // MARK: - Item Form View
-struct RevolutionaryItemFormView: View {
-    let analysis: RevolutionaryAnalysis
+struct ItemFormView: View {
+    let analysis: AnalysisResult
     let onSave: (InventoryItem) -> Void
     @EnvironmentObject var inventoryManager: InventoryManager
     @Environment(\.presentationMode) var presentationMode
@@ -484,14 +483,14 @@ struct RevolutionaryItemFormView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        empireHaptic(.light)
+                        hapticFeedback(.light)
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        empireHaptic(.medium)
+                        hapticFeedback(.medium)
                         saveItem()
                     }
                     .disabled(purchasePrice <= 0)
@@ -548,14 +547,14 @@ struct RevolutionaryItemFormView: View {
 
 // MARK: - Direct eBay Listing View
 struct DirectEbayListingView: View {
-    let analysis: RevolutionaryAnalysis
-    @EnvironmentObject var ebayListingService: DirectEbayListingService
+    let analysis: AnalysisResult
+    @EnvironmentObject var ebayListingService: EbayListingService
     @Environment(\.presentationMode) var presentationMode
     @State private var selectedPrice: Double
     @State private var customTitle = ""
     @State private var customDescription = ""
     
-    init(analysis: RevolutionaryAnalysis) {
+    init(analysis: AnalysisResult) {
         self.analysis = analysis
         self._selectedPrice = State(initialValue: analysis.realisticPrice)
         self._customTitle = State(initialValue: analysis.ebayTitle)
@@ -611,7 +610,7 @@ struct DirectEbayListingView: View {
                     
                     // List Button
                     Button(action: {
-                        empireHaptic(.heavy)
+                        hapticFeedback(.heavy)
                         listToEbay()
                     }) {
                         HStack {
@@ -668,7 +667,7 @@ struct DirectEbayListingView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        empireHaptic(.light)
+                        hapticFeedback(.light)
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
@@ -705,7 +704,7 @@ struct DirectEbayListingView: View {
 
 // MARK: - Item Preview Card
 struct ItemPreviewCard: View {
-    let analysis: RevolutionaryAnalysis
+    let analysis: AnalysisResult
     let selectedPrice: Double
     
     var body: some View {
@@ -751,7 +750,7 @@ struct ItemPreviewCard: View {
 
 // MARK: - Price Selection Card
 struct PriceSelectionCard: View {
-    let analysis: RevolutionaryAnalysis
+    let analysis: AnalysisResult
     @Binding var selectedPrice: Double
     
     var body: some View {
@@ -809,7 +808,7 @@ struct PriceOption: View {
     
     var body: some View {
         Button(action: {
-            empireHaptic(.light)
+            hapticFeedback(.light)
             onTap()
         }) {
             VStack(spacing: 6) {
@@ -837,10 +836,4 @@ struct PriceOption: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
-}
-
-// Helper function for haptic feedback
-func empireHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-    let impactFeedback = UIImpactFeedbackGenerator(style: style)
-    impactFeedback.impactOccurred()
 }

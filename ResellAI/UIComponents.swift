@@ -489,25 +489,25 @@ struct ProspectAnalysisResultView: View {
                     GridItem(.flexible())
                 ], spacing: 12) {
                     
-                    MarketStatCard(
+                    ProspectStatCard(
                         title: "Demand",
                         value: analysis.demandLevel,
                         color: getDemandColor(analysis.demandLevel)
                     )
                     
-                    MarketStatCard(
+                    ProspectStatCard(
                         title: "Competition",
                         value: "\(analysis.competitorCount)",
                         color: analysis.competitorCount > 100 ? .red : .green
                     )
                     
-                    MarketStatCard(
+                    ProspectStatCard(
                         title: "Trend",
                         value: analysis.marketTrend,
                         color: getTrendColor(analysis.marketTrend)
                     )
                     
-                    MarketStatCard(
+                    ProspectStatCard(
                         title: "Sell Time",
                         value: analysis.sellTimeEstimate,
                         color: .blue
@@ -542,8 +542,8 @@ struct ProspectAnalysisResultView: View {
     }
 }
 
-// MARK: - Market Stat Card
-struct MarketStatCard: View {
+// MARK: - Prospect Stat Card
+struct ProspectStatCard: View {
     let title: String
     let value: String
     let color: Color
@@ -585,11 +585,11 @@ struct AutoListingView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.blue)
                     
-                    ItemPreviewCard(item: item)
+                    InventoryItemPreviewCard(item: item)
                     
                     if generatedListing.isEmpty {
                         Button(action: {
-                            empireHaptic(.medium)
+                            hapticFeedback(.medium)
                             generateListing()
                         }) {
                             HStack {
@@ -628,7 +628,7 @@ struct AutoListingView: View {
                             
                             HStack(spacing: 15) {
                                 Button(action: {
-                                    empireHaptic(.light)
+                                    hapticFeedback(.light)
                                     showingEditSheet = true
                                 }) {
                                     HStack {
@@ -643,7 +643,7 @@ struct AutoListingView: View {
                                 }
                                 
                                 Button(action: {
-                                    empireHaptic(.medium)
+                                    hapticFeedback(.medium)
                                     showingShareSheet = true
                                 }) {
                                     HStack {
@@ -659,7 +659,7 @@ struct AutoListingView: View {
                             }
                             
                             Button(action: {
-                                empireHaptic(.light)
+                                hapticFeedback(.light)
                                 copyToClipboard()
                             }) {
                                 HStack {
@@ -683,7 +683,7 @@ struct AutoListingView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        empireHaptic(.light)
+                        hapticFeedback(.light)
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
@@ -747,8 +747,8 @@ struct AutoListingView: View {
     }
 }
 
-// MARK: - Item Preview Card
-struct ItemPreviewCard: View {
+// MARK: - Inventory Item Preview Card
+struct InventoryItemPreviewCard: View {
     let item: InventoryItem
     
     var body: some View {
@@ -828,7 +828,7 @@ struct ListingEditView: View {
                     .padding()
                 
                 Button(action: {
-                    empireHaptic(.medium)
+                    hapticFeedback(.medium)
                     listing = editedListing
                     presentationMode.wrappedValue.dismiss()
                 }) {
@@ -846,7 +846,7 @@ struct ListingEditView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        empireHaptic(.light)
+                        hapticFeedback(.light)
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
@@ -868,29 +868,6 @@ struct ShareSheet: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
-// MARK: - Direct eBay Listing Service (Mock Implementation)
-class DirectEbayListingService: ObservableObject {
-    @Published var isListing = false
-    @Published var listingProgress = "Ready to list"
-    @Published var listingURL: String?
-    @Published var isConfigured = false
-    
-    func listDirectlyToEbay(item: InventoryItem, analysis: RevolutionaryAnalysis, completion: @escaping (Bool, String?) -> Void) {
-        DispatchQueue.main.async {
-            self.isListing = true
-            self.listingProgress = "Uploading to eBay..."
-        }
-        
-        // Mock eBay listing process
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            self.isListing = false
-            self.listingProgress = "Listed successfully"
-            self.listingURL = "https://ebay.com/item/mock-listing-\(item.itemNumber)"
-            completion(true, self.listingURL)
-        }
-    }
 }
 
 // Haptic feedback function (centralized)

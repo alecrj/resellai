@@ -3,31 +3,28 @@ import Foundation
 import PhotosUI
 import Vision
 
-// MARK: - Fixed API Configuration
-struct RevolutionaryAPIConfig {
+// MARK: - API Configuration
+struct APIConfig {
     static let openAIKey = "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"
     static let spreadsheetID = "1HLNiNBfIqLeIDfNTsEOkl5oPd0McUQGaCaL3cPOobLA"
     static let openAIEndpoint = "https://api.openai.com/v1/chat/completions"
     static let googleAppsScriptURL = "https://script.google.com/macros/s/AKfycbztiFfbkCag9QghCX6nTmqI27LgtRSQZPgV4VvJJIMOiepedYlRvRnjhyF0x6i-sS_4Ew/exec"
-    
-    // 🚀 REAL RAPIDAPI CONFIGURATION
     static let rapidAPIKey = "490c86ec17msh2dc05730fae7290p198ab5jsn972047a484fa"
     static let rapidAPIHost = "ebay-data-scraper.p.rapidapi.com"
 }
 
-// MARK: - 🚀 FIXED Revolutionary AI Service
-class RevolutionaryAIService: ObservableObject {
+// MARK: - AI Service
+class AIService: ObservableObject {
     @Published var isAnalyzing = false
     @Published var analysisProgress = "Ready"
     @Published var currentStep = 0
     @Published var totalSteps = 5
-    @Published var revolutionaryMode = true
     
-    // ✅ FIXED: Main analysis function with proper error handling
-    func revolutionaryAnalysis(_ images: [UIImage], completion: @escaping (RevolutionaryAnalysis) -> Void) {
+    // Main analysis function with proper error handling
+    func analyzeItem(_ images: [UIImage], completion: @escaping (AnalysisResult) -> Void) {
         guard !images.isEmpty else {
             print("❌ No images provided for analysis")
-            completion(fallbackRevolutionaryAnalysis(images))
+            completion(fallbackAnalysisResult(images))
             return
         }
         
@@ -72,7 +69,7 @@ class RevolutionaryAIService: ObservableObject {
                     }
                     
                     // Step 5: Compile Results
-                    let revolutionaryResult = self.compileRevolutionaryResults(
+                    let result = self.compileAnalysisResults(
                         aiResults: aiResults,
                         visionResults: visionResults,
                         marketData: marketData,
@@ -84,14 +81,14 @@ class RevolutionaryAIService: ObservableObject {
                         self.isAnalyzing = false
                         self.analysisProgress = "Ready"
                         self.currentStep = 0
-                        completion(revolutionaryResult)
+                        completion(result)
                     }
                 }
             }
         }
     }
     
-    // ✅ NEW: Prospecting analysis (no asking price needed)
+    // Prospecting analysis (no asking price needed)
     func analyzeForProspecting(images: [UIImage], category: String, completion: @escaping (ProspectAnalysis) -> Void) {
         guard !images.isEmpty else {
             completion(fallbackProspectAnalysis(images))
@@ -164,7 +161,7 @@ class RevolutionaryAIService: ObservableObject {
                     sourcingTips: recommendation.sourcingTips,
                     images: images,
                     breakEvenPrice: self.calculateBreakEvenPrice(marketData.averagePrice),
-                    targetBuyPrice: maxBuyPrice * 0.8, // 20% below max for best profit
+                    targetBuyPrice: maxBuyPrice * 0.8,
                     quickFlipPotential: marketData.demandLevel == "High" && marketData.competitorCount < 100,
                     holidayDemand: identification.itemName.lowercased().contains("gaming") ||
                                   identification.itemName.lowercased().contains("toy") ||
@@ -181,8 +178,8 @@ class RevolutionaryAIService: ObservableObject {
         }
     }
     
-    // ✅ NEW: Barcode analysis for business mode (with ultra-specific details)
-    func analyzeBarcode(_ barcode: String, images: [UIImage], completion: @escaping (RevolutionaryAnalysis) -> Void) {
+    // Barcode analysis for business mode (with ultra-specific details)
+    func analyzeBarcode(_ barcode: String, images: [UIImage], completion: @escaping (AnalysisResult) -> Void) {
         DispatchQueue.main.async {
             self.isAnalyzing = true
             self.currentStep = 0
@@ -209,17 +206,17 @@ class RevolutionaryAIService: ObservableObject {
                 }
                 
                 // Step 3: Enhanced market research with barcode data
-                self.performEnhancedMarketResearch(barcodeData: barcodeData) { marketData in
+                self.performMarketResearch(for: barcodeData.productName) { marketData in
                     DispatchQueue.main.async {
-                        self.analysisProgress = "✅ Step 4/4: Compiling ultra-specific analysis..."
+                        self.analysisProgress = "✅ Step 4/4: Compiling analysis..."
                         self.currentStep = 4
                     }
                     
                     // Step 4: Compile with barcode-enhanced data
-                    let enhancedAIResults = self.createEnhancedAIResults(from: barcodeData, vision: visionResults)
+                    let enhancedAIResults = self.createAIResultsFromBarcode(from: barcodeData, vision: visionResults)
                     let pricingData = self.calculateAdvancedPricing(enhancedAIResults, market: marketData, vision: visionResults)
                     
-                    let result = self.compileRevolutionaryResults(
+                    let result = self.compileAnalysisResults(
                         aiResults: enhancedAIResults,
                         visionResults: visionResults,
                         marketData: marketData,
@@ -238,84 +235,86 @@ class RevolutionaryAIService: ObservableObject {
         }
     }
     
-    // Enhanced barcode database lookup
-    private func lookupBarcodeInDatabase(_ barcode: String, completion: @escaping (BarcodeData) -> Void) {
-        // This would integrate with APIs like:
-        // - UPC Database API
-        // - Barcode Spider API
-        // - Product API from major retailers
-        // - Google Shopping API
+    // Barcode lookup for prospecting
+    func lookupBarcodeForProspecting(_ barcode: String, completion: @escaping (ProspectAnalysis) -> Void) {
+        DispatchQueue.main.async {
+            self.isAnalyzing = true
+            self.analysisProgress = "🔍 Looking up barcode in database..."
+        }
         
-        // For now, simulate enhanced lookup
-        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
-            let mockData = BarcodeData(
-                upc: barcode,
-                productName: "Nike Air Force 1 Low White/White",
-                brand: "Nike",
-                modelNumber: "315122-111",
-                size: "Size 10",
-                colorway: "White/White",
-                releaseYear: "2007",
-                originalRetailPrice: 90.0,
-                category: "Men's Shoes",
-                subcategory: "Athletic Sneakers",
-                description: "Nike Air Force 1 Low sneakers in classic white colorway",
-                imageUrls: [],
-                specifications: [
-                    "Style Code": "315122-111",
-                    "Upper Material": "Leather",
-                    "Sole Type": "Rubber",
-                    "Closure": "Lace-up"
-                ],
-                isAuthentic: true,
-                confidence: 0.95
+        lookupBarcodeInDatabase(barcode) { barcodeData in
+            let estimatedCurrentValue = barcodeData.originalRetailPrice * 0.6
+            let maxBuyPrice = estimatedCurrentValue * 0.5
+            let potentialProfit = estimatedCurrentValue - maxBuyPrice - (estimatedCurrentValue * 0.15)
+            let expectedROI = maxBuyPrice > 0 ? (potentialProfit / maxBuyPrice) * 100 : 0
+            
+            var recommendation: ProspectDecision = .investigate
+            var reasons: [String] = []
+            var sourcingTips: [String] = []
+            
+            if expectedROI >= 100 && potentialProfit >= 10 {
+                recommendation = .buy
+                reasons.append("🔥 Excellent ROI potential: \(String(format: "%.1f", expectedROI))%")
+                reasons.append("💰 Strong profit: $\(String(format: "%.2f", potentialProfit))")
+                sourcingTips.append("✅ BUY if under $\(String(format: "%.2f", maxBuyPrice))")
+            } else if expectedROI >= 50 {
+                recommendation = .investigate
+                reasons.append("⚠️ Moderate ROI: \(String(format: "%.1f", expectedROI))%")
+                sourcingTips.append("🤔 Consider if under $\(String(format: "%.2f", maxBuyPrice))")
+            } else {
+                recommendation = .avoid
+                reasons.append("❌ Low ROI: \(String(format: "%.1f", expectedROI))%")
+                sourcingTips.append("🚫 AVOID unless major discount")
+            }
+            
+            reasons.append("📱 Exact product match via barcode")
+            sourcingTips.append("🔍 Verify condition matches photos")
+            sourcingTips.append("✅ Check for authenticity markers")
+            
+            let prospectResult = ProspectAnalysis(
+                itemName: barcodeData.productName,
+                brand: barcodeData.brand,
+                condition: "Good",
+                confidence: barcodeData.confidence,
+                estimatedValue: estimatedCurrentValue,
+                maxPayPrice: maxBuyPrice,
+                potentialProfit: potentialProfit,
+                expectedROI: expectedROI,
+                recommendation: recommendation,
+                reasons: reasons,
+                riskLevel: recommendation == .buy ? "Low" : recommendation == .investigate ? "Medium" : "High",
+                demandLevel: self.calculateDemandFromCategory(barcodeData.category),
+                competitorCount: 100,
+                marketTrend: "Stable",
+                sellTimeEstimate: self.estimateSellTimeFromCategory(barcodeData.category),
+                seasonalFactors: self.calculateSeasonalDemand(for: barcodeData),
+                sourcingTips: sourcingTips,
+                images: [],
+                breakEvenPrice: estimatedCurrentValue * 0.8,
+                targetBuyPrice: maxBuyPrice * 0.8,
+                quickFlipPotential: barcodeData.brand.lowercased() == "nike" || barcodeData.brand.lowercased() == "adidas",
+                holidayDemand: barcodeData.category.lowercased().contains("shoes") || barcodeData.category.lowercased().contains("clothing")
             )
-            completion(mockData)
+            
+            DispatchQueue.main.async {
+                self.isAnalyzing = false
+                self.analysisProgress = "Ready"
+                completion(prospectResult)
+            }
         }
     }
     
-    private func performEnhancedMarketResearch(barcodeData: BarcodeData, completion: @escaping (LiveMarketData) -> Void) {
-        // Enhanced search using exact product details from barcode
-        let enhancedQuery = "\(barcodeData.brand) \(barcodeData.modelNumber) \(barcodeData.size)"
-        performMarketResearch(for: enhancedQuery, completion: completion)
-    }
+    // MARK: - Private Helper Methods
     
-    private func createEnhancedAIResults(from barcodeData: BarcodeData, vision: VisionAnalysisResults) -> UltraAIResults {
-        return UltraAIResults(
-            itemName: barcodeData.productName,
-            brand: barcodeData.brand,
-            modelNumber: barcodeData.modelNumber,
-            size: barcodeData.size,
-            colorway: barcodeData.colorway,
-            releaseYear: barcodeData.releaseYear,
-            category: barcodeData.category,
-            subcategory: barcodeData.subcategory,
-            confidence: barcodeData.confidence,
-            realisticCondition: vision.detectedCondition,
-            conditionJustification: "Condition assessed via computer vision analysis",
-            estimatedRetailPrice: barcodeData.originalRetailPrice,
-            realisticUsedPrice: barcodeData.originalRetailPrice * 0.5, // Estimate based on condition
-            priceJustification: "Price based on barcode lookup and current market conditions",
-            keywords: generateEnhancedKeywords(from: barcodeData),
-            competitionLevel: "Medium", // Would be calculated based on market data
-            marketReality: "Exact product match via barcode - highly accurate pricing",
-            authenticationNotes: barcodeData.isAuthentic ? "Verified authentic via barcode" : "Verify authenticity",
-            seasonalDemand: calculateSeasonalDemand(for: barcodeData),
-            sizePopularity: calculateSizePopularity(size: barcodeData.size, category: barcodeData.category)
-        )
-    }
-    
-    // MARK: - ✅ FIXED AI Analysis with Timeout Protection
-    private func performAIAnalysisWithTimeout(_ images: [UIImage], visionData: VisionAnalysisResults, completion: @escaping (UltraAIResults) -> Void) {
+    private func performAIAnalysisWithTimeout(_ images: [UIImage], visionData: VisionAnalysisResults, completion: @escaping (AIResults) -> Void) {
         let timeoutTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: false) { _ in
             print("⚠️ AI Analysis timeout - using fallback")
             completion(self.fallbackAIResults())
         }
         
-        // Convert images to base64
         var base64Images: [String] = []
-        for image in images.prefix(3) { // Limit to 3 images to prevent timeout
-            if let imageData = image.jpegData(compressionQuality: 0.6) { // Reduced quality for speed
+        for image in images.prefix(3) {
+            if let imageData = image.jpegData(compressionQuality: 0.6) {
                 base64Images.append(imageData.base64EncodedString())
             }
         }
@@ -351,13 +350,13 @@ class RevolutionaryAIService: ObservableObject {
                 "type": "image_url",
                 "image_url": [
                     "url": "data:image/jpeg;base64,\(base64Image)",
-                    "detail": "low" // Using low detail for speed
+                    "detail": "low"
                 ]
             ])
         }
         
         let payload: [String: Any] = [
-            "model": "gpt-4o-mini", // Using mini for speed
+            "model": "gpt-4o-mini",
             "messages": [
                 [
                     "role": "user",
@@ -368,11 +367,11 @@ class RevolutionaryAIService: ObservableObject {
             "temperature": 0.1
         ]
         
-        var request = URLRequest(url: URL(string: RevolutionaryAPIConfig.openAIEndpoint)!)
+        var request = URLRequest(url: URL(string: APIConfig.openAIEndpoint)!)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(RevolutionaryAPIConfig.openAIKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(APIConfig.openAIKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 12.0 // 12 second timeout
+        request.timeoutInterval = 12.0
         
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
@@ -406,7 +405,7 @@ class RevolutionaryAIService: ObservableObject {
                     if let jsonData = cleanContent.data(using: .utf8),
                        let itemData = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
                         
-                        let results = UltraAIResults(
+                        let results = AIResults(
                             itemName: itemData["itemName"] as? String ?? "Unknown Item",
                             brand: itemData["brand"] as? String ?? "",
                             modelNumber: itemData["modelNumber"] as? String ?? "",
@@ -444,24 +443,21 @@ class RevolutionaryAIService: ObservableObject {
         }.resume()
     }
     
-    // MARK: - Computer Vision Analysis
     private func analyzeWithComputerVision(_ images: [UIImage], completion: @escaping (VisionAnalysisResults) -> Void) {
         var damageFound: [String] = []
-        var conditionScore = 90.0 // Start optimistic
+        var conditionScore = 90.0
         var textDetected: [String] = []
         
         let group = DispatchGroup()
         
-        // Analyze first 2 images to prevent timeout
         for (index, image) in images.prefix(2).enumerated() {
             guard let cgImage = image.cgImage else { continue }
             
             group.enter()
             
-            // Text Recognition
             let textRequest = VNRecognizeTextRequest { request, error in
                 if let observations = request.results as? [VNRecognizedTextObservation] {
-                    for observation in observations.prefix(5) { // Limit results
+                    for observation in observations.prefix(5) {
                         if let topCandidate = observation.topCandidates(1).first {
                             let text = topCandidate.string
                             if self.isRelevantText(text) {
@@ -472,7 +468,7 @@ class RevolutionaryAIService: ObservableObject {
                 }
                 group.leave()
             }
-            textRequest.recognitionLevel = .fast // Use fast recognition
+            textRequest.recognitionLevel = .fast
             
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             try? handler.perform([textRequest])
@@ -491,11 +487,9 @@ class RevolutionaryAIService: ObservableObject {
         }
     }
     
-    // MARK: - Market Research
     private func performMarketResearch(for itemName: String, completion: @escaping (LiveMarketData) -> Void) {
-        // Use RapidAPI for real market data
         let encodedQuery = itemName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let urlString = "https://\(RevolutionaryAPIConfig.rapidAPIHost)/search?q=\(encodedQuery)&site=ebay.com&format=json&limit=10"
+        let urlString = "https://\(APIConfig.rapidAPIHost)/search?q=\(encodedQuery)&site=ebay.com&format=json&limit=10"
         
         guard let url = URL(string: urlString) else {
             completion(fallbackMarketData())
@@ -503,9 +497,9 @@ class RevolutionaryAIService: ObservableObject {
         }
         
         var request = URLRequest(url: url)
-        request.setValue(RevolutionaryAPIConfig.rapidAPIKey, forHTTPHeaderField: "X-RapidAPI-Key")
-        request.setValue(RevolutionaryAPIConfig.rapidAPIHost, forHTTPHeaderField: "X-RapidAPI-Host")
-        request.timeoutInterval = 8.0 // 8 second timeout
+        request.setValue(APIConfig.rapidAPIKey, forHTTPHeaderField: "X-RapidAPI-Key")
+        request.setValue(APIConfig.rapidAPIHost, forHTTPHeaderField: "X-RapidAPI-Host")
+        request.timeoutInterval = 8.0
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else {
@@ -521,7 +515,7 @@ class RevolutionaryAIService: ObservableObject {
                     var soldPrices: [Double] = []
                     var activeListings = 0
                     
-                    for item in items.prefix(10) { // Limit processing
+                    for item in items.prefix(10) {
                         if let priceStr = item["price"] as? String,
                            let price = self.extractPrice(from: priceStr) {
                             if item["sold"] as? Bool == true {
@@ -555,11 +549,42 @@ class RevolutionaryAIService: ObservableObject {
         }.resume()
     }
     
-    // MARK: - Prospecting-Specific Calculations
+    // Additional helper methods...
+    
+    private func lookupBarcodeInDatabase(_ barcode: String, completion: @escaping (BarcodeData) -> Void) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+            let mockData = BarcodeData(
+                upc: barcode,
+                productName: "Nike Air Force 1 Low White/White",
+                brand: "Nike",
+                modelNumber: "315122-111",
+                size: "Size 10",
+                colorway: "White/White",
+                releaseYear: "2007",
+                originalRetailPrice: 90.0,
+                category: "Men's Shoes",
+                subcategory: "Athletic Sneakers",
+                description: "Nike Air Force 1 Low sneakers in classic white colorway",
+                imageUrls: [],
+                specifications: [
+                    "Style Code": "315122-111",
+                    "Upper Material": "Leather",
+                    "Sole Type": "Rubber",
+                    "Closure": "Lace-up"
+                ],
+                isAuthentic: true,
+                confidence: 0.95
+            )
+            completion(mockData)
+        }
+    }
+    
+    // Include all other helper methods from the original file...
+    // (calculateMaxBuyPrice, generateProspectingRecommendation, etc.)
+    
     private func calculateMaxBuyPrice(marketValue: Double, condition: String, competitorCount: Int, demandLevel: String) -> Double {
-        var baseMultiplier = 0.5 // Start at 50% of market value
+        var baseMultiplier = 0.5
         
-        // Adjust based on condition
         switch condition {
         case "Like New", "Excellent": baseMultiplier += 0.1
         case "Very Good": baseMultiplier += 0.05
@@ -567,14 +592,12 @@ class RevolutionaryAIService: ObservableObject {
         default: break
         }
         
-        // Adjust based on demand
         switch demandLevel {
         case "High": baseMultiplier += 0.05
         case "Low": baseMultiplier -= 0.1
         default: break
         }
         
-        // Adjust based on competition
         if competitorCount > 200 {
             baseMultiplier -= 0.05
         } else if competitorCount < 50 {
@@ -582,7 +605,7 @@ class RevolutionaryAIService: ObservableObject {
         }
         
         let maxBuyPrice = marketValue * max(0.2, min(0.7, baseMultiplier))
-        return max(1.0, maxBuyPrice) // Minimum $1
+        return max(1.0, maxBuyPrice)
     }
     
     private func calculatePotentialProfit(_ buyPrice: Double, estimatedValue: Double) -> Double {
@@ -666,12 +689,11 @@ class RevolutionaryAIService: ObservableObject {
         )
     }
     
-    // MARK: - Helper Methods (Continued from original)
+    // Add all other helper methods...
     private func quickIdentification(_ images: [UIImage], completion: @escaping (QuickIdentification) -> Void) {
-        // Simplified identification for prospecting mode
         DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
             let identification = QuickIdentification(
-                itemName: "Electronic Device", // This would be AI-detected
+                itemName: "Electronic Device",
                 brand: "Unknown",
                 condition: "Good",
                 confidence: 0.75
@@ -680,7 +702,7 @@ class RevolutionaryAIService: ObservableObject {
         }
     }
     
-    private func calculateAdvancedPricing(_ ai: UltraAIResults, market: LiveMarketData, vision: VisionAnalysisResults) -> AdvancedPricingData {
+    private func calculateAdvancedPricing(_ ai: AIResults, market: LiveMarketData, vision: VisionAnalysisResults) -> AdvancedPricingData {
         let basePrice = market.averagePrice
         let conditionMultiplier = getConditionMultiplier(vision.conditionScore)
         let competitionMultiplier = market.competitorCount > 100 ? 0.9 : 1.0
@@ -700,8 +722,8 @@ class RevolutionaryAIService: ObservableObject {
         )
     }
     
-    private func compileRevolutionaryResults(aiResults: UltraAIResults, visionResults: VisionAnalysisResults, marketData: LiveMarketData, pricingData: AdvancedPricingData, images: [UIImage]) -> RevolutionaryAnalysis {
-        return RevolutionaryAnalysis(
+    private func compileAnalysisResults(aiResults: AIResults, visionResults: VisionAnalysisResults, marketData: LiveMarketData, pricingData: AdvancedPricingData, images: [UIImage]) -> AnalysisResult {
+        return AnalysisResult(
             itemName: aiResults.itemName,
             brand: aiResults.brand,
             modelNumber: aiResults.modelNumber,
@@ -739,7 +761,7 @@ class RevolutionaryAIService: ObservableObject {
         )
     }
     
-    // MARK: - Utility Methods
+    // Add all other helper methods with simplified names...
     private func isRelevantText(_ text: String) -> Bool {
         return text.count > 3 && (text.contains(where: { $0.isNumber }) || text.contains(where: { $0.isUppercase }))
     }
@@ -819,13 +841,13 @@ class RevolutionaryAIService: ObservableObject {
         return "Standard patterns"
     }
     
-    private func generateOptimizedTitle(_ ai: UltraAIResults, market: LiveMarketData) -> String {
+    private func generateOptimizedTitle(_ ai: AIResults, market: LiveMarketData) -> String {
         let brand = ai.brand.isEmpty ? "" : "\(ai.brand) "
         let model = ai.modelNumber.isEmpty ? "" : " \(ai.modelNumber)"
         return "\(brand)\(ai.itemName)\(model) - \(ai.realisticCondition)"
     }
     
-    private func generateDescription(_ ai: UltraAIResults, vision: VisionAnalysisResults) -> String {
+    private func generateDescription(_ ai: AIResults, vision: VisionAnalysisResults) -> String {
         return """
         \(ai.itemName) in \(ai.realisticCondition) condition.
         
@@ -862,43 +884,38 @@ class RevolutionaryAIService: ObservableObject {
         )
     }
     
-    // MARK: - Fallback Methods
-    private func fallbackAIResults() -> UltraAIResults {
-        return UltraAIResults(
-            itemName: "Unknown Item",
-            brand: "",
-            modelNumber: "",
-            size: "",
-            colorway: "",
-            releaseYear: "",
-            category: "Other",
-            subcategory: "",
-            confidence: 0.6,
-            realisticCondition: "Good",
-            conditionJustification: "Unable to assess condition accurately",
-            estimatedRetailPrice: 50.0,
-            realisticUsedPrice: 25.0,
-            priceJustification: "Conservative estimate - manual research recommended",
-            keywords: ["item"],
-            competitionLevel: "Unknown",
-            marketReality: "Manual analysis required",
-            authenticationNotes: "Manual verification needed",
-            seasonalDemand: "Unknown",
-            sizePopularity: "Unknown"
+    private func createAIResultsFromBarcode(from barcodeData: BarcodeData, vision: VisionAnalysisResults) -> AIResults {
+        return AIResults(
+            itemName: barcodeData.productName,
+            brand: barcodeData.brand,
+            modelNumber: barcodeData.modelNumber,
+            size: barcodeData.size,
+            colorway: barcodeData.colorway,
+            releaseYear: barcodeData.releaseYear,
+            category: barcodeData.category,
+            subcategory: barcodeData.subcategory,
+            confidence: barcodeData.confidence,
+            realisticCondition: vision.detectedCondition,
+            conditionJustification: "Condition assessed via computer vision analysis",
+            estimatedRetailPrice: barcodeData.originalRetailPrice,
+            realisticUsedPrice: barcodeData.originalRetailPrice * 0.5,
+            priceJustification: "Price based on barcode lookup and current market conditions",
+            keywords: generateKeywords(from: barcodeData),
+            competitionLevel: "Medium",
+            marketReality: "Exact product match via barcode - highly accurate pricing",
+            authenticationNotes: barcodeData.isAuthentic ? "Verified authentic via barcode" : "Verify authenticity",
+            seasonalDemand: calculateSeasonalDemand(for: barcodeData),
+            sizePopularity: calculateSizePopularity(size: barcodeData.size, category: barcodeData.category)
         )
     }
     
-    // ✅ NEW: Enhanced keyword generation
-    private func generateEnhancedKeywords(from barcodeData: BarcodeData) -> [String] {
+    private func generateKeywords(from barcodeData: BarcodeData) -> [String] {
         var keywords: [String] = []
         
-        // Brand and model
         keywords.append(barcodeData.brand.lowercased())
         if !barcodeData.modelNumber.isEmpty {
             keywords.append(barcodeData.modelNumber)
         }
-        
-        // Size and colorway
         if !barcodeData.size.isEmpty {
             keywords.append(barcodeData.size.lowercased())
         }
@@ -906,14 +923,12 @@ class RevolutionaryAIService: ObservableObject {
             keywords.append(barcodeData.colorway.lowercased())
         }
         
-        // Category-specific keywords
         if barcodeData.category.lowercased().contains("shoes") {
             keywords.append(contentsOf: ["sneakers", "footwear", "authentic"])
         } else if barcodeData.category.lowercased().contains("clothing") {
             keywords.append(contentsOf: ["apparel", "fashion", "style"])
         }
         
-        // Year and vintage keywords
         if !barcodeData.releaseYear.isEmpty {
             keywords.append(barcodeData.releaseYear)
             if let year = Int(barcodeData.releaseYear), year < 2010 {
@@ -921,7 +936,7 @@ class RevolutionaryAIService: ObservableObject {
             }
         }
         
-        return Array(Set(keywords)) // Remove duplicates
+        return Array(Set(keywords))
     }
     
     private func calculateSeasonalDemand(for barcodeData: BarcodeData) -> String {
@@ -951,7 +966,6 @@ class RevolutionaryAIService: ObservableObject {
     
     private func calculateSizePopularity(size: String, category: String) -> String {
         if category.lowercased().contains("shoes") {
-            // Men's shoe size popularity
             if size.contains("9") || size.contains("10") || size.contains("11") {
                 return "High demand size - most popular"
             } else if size.contains("8") || size.contains("12") {
@@ -972,76 +986,6 @@ class RevolutionaryAIService: ObservableObject {
         }
         
         return "Size demand varies by category"
-    }
-    
-    // ✅ NEW: Enhanced prospecting barcode lookup
-    func lookupBarcodeForProspecting(_ barcode: String, completion: @escaping (ProspectAnalysis) -> Void) {
-        DispatchQueue.main.async {
-            self.isAnalyzing = true
-            self.analysisProgress = "🔍 Looking up barcode in database..."
-        }
-        
-        lookupBarcodeInDatabase(barcode) { barcodeData in
-            // Calculate max buy price based on retail and current market
-            let estimatedCurrentValue = barcodeData.originalRetailPrice * 0.6 // Estimate 60% of retail for good condition
-            let maxBuyPrice = estimatedCurrentValue * 0.5 // 50% of current value for good profit
-            let potentialProfit = estimatedCurrentValue - maxBuyPrice - (estimatedCurrentValue * 0.15) // Minus fees
-            let expectedROI = maxBuyPrice > 0 ? (potentialProfit / maxBuyPrice) * 100 : 0
-            
-            var recommendation: ProspectDecision = .investigate
-            var reasons: [String] = []
-            var sourcingTips: [String] = []
-            
-            if expectedROI >= 100 && potentialProfit >= 10 {
-                recommendation = .buy
-                reasons.append("🔥 Excellent ROI potential: \(String(format: "%.1f", expectedROI))%")
-                reasons.append("💰 Strong profit: $\(String(format: "%.2f", potentialProfit))")
-                sourcingTips.append("✅ BUY if under $\(String(format: "%.2f", maxBuyPrice))")
-            } else if expectedROI >= 50 {
-                recommendation = .investigate
-                reasons.append("⚠️ Moderate ROI: \(String(format: "%.1f", expectedROI))%")
-                sourcingTips.append("🤔 Consider if under $\(String(format: "%.2f", maxBuyPrice))")
-            } else {
-                recommendation = .avoid
-                reasons.append("❌ Low ROI: \(String(format: "%.1f", expectedROI))%")
-                sourcingTips.append("🚫 AVOID unless major discount")
-            }
-            
-            reasons.append("📱 Exact product match via barcode")
-            sourcingTips.append("🔍 Verify condition matches photos")
-            sourcingTips.append("✅ Check for authenticity markers")
-            
-            let prospectResult = ProspectAnalysis(
-                itemName: barcodeData.productName,
-                brand: barcodeData.brand,
-                condition: "Good", // Default assumption
-                confidence: barcodeData.confidence,
-                estimatedValue: estimatedCurrentValue,
-                maxPayPrice: maxBuyPrice,
-                potentialProfit: potentialProfit,
-                expectedROI: expectedROI,
-                recommendation: recommendation,
-                reasons: reasons,
-                riskLevel: recommendation == .buy ? "Low" : recommendation == .investigate ? "Medium" : "High",
-                demandLevel: self.calculateDemandFromCategory(barcodeData.category),
-                competitorCount: 100, // Would be calculated from market research
-                marketTrend: "Stable",
-                sellTimeEstimate: self.estimateSellTimeFromCategory(barcodeData.category),
-                seasonalFactors: self.calculateSeasonalDemand(for: barcodeData),
-                sourcingTips: sourcingTips,
-                images: [],
-                breakEvenPrice: estimatedCurrentValue * 0.8,
-                targetBuyPrice: maxBuyPrice * 0.8,
-                quickFlipPotential: barcodeData.brand.lowercased() == "nike" || barcodeData.brand.lowercased() == "adidas",
-                holidayDemand: barcodeData.category.lowercased().contains("shoes") || barcodeData.category.lowercased().contains("clothing")
-            )
-            
-            DispatchQueue.main.async {
-                self.isAnalyzing = false
-                self.analysisProgress = "Ready"
-                completion(prospectResult)
-            }
-        }
     }
     
     private func calculateDemandFromCategory(_ category: String) -> String {
@@ -1066,6 +1010,32 @@ class RevolutionaryAIService: ObservableObject {
         }
     }
     
+    // Fallback methods
+    private func fallbackAIResults() -> AIResults {
+        return AIResults(
+            itemName: "Unknown Item",
+            brand: "",
+            modelNumber: "",
+            size: "",
+            colorway: "",
+            releaseYear: "",
+            category: "Other",
+            subcategory: "",
+            confidence: 0.6,
+            realisticCondition: "Good",
+            conditionJustification: "Unable to assess condition accurately",
+            estimatedRetailPrice: 50.0,
+            realisticUsedPrice: 25.0,
+            priceJustification: "Conservative estimate - manual research recommended",
+            keywords: ["item"],
+            competitionLevel: "Unknown",
+            marketReality: "Manual analysis required",
+            authenticationNotes: "Manual verification needed",
+            seasonalDemand: "Unknown",
+            sizePopularity: "Unknown"
+        )
+    }
+    
     private func fallbackMarketData() -> LiveMarketData {
         return LiveMarketData(
             recentSales: [20.0, 25.0, 30.0, 35.0, 28.0],
@@ -1077,7 +1047,7 @@ class RevolutionaryAIService: ObservableObject {
         )
     }
     
-    private func fallbackRevolutionaryAnalysis(_ images: [UIImage]) -> RevolutionaryAnalysis {
+    private func fallbackAnalysisResult(_ images: [UIImage]) -> AnalysisResult {
         let fallbackAI = fallbackAIResults()
         let fallbackMarket = fallbackMarketData()
         let fallbackVision = VisionAnalysisResults(
@@ -1088,7 +1058,7 @@ class RevolutionaryAIService: ObservableObject {
             confidenceLevel: 0.6
         )
         
-        return compileRevolutionaryResults(
+        return compileAnalysisResults(
             aiResults: fallbackAI,
             visionResults: fallbackVision,
             marketData: fallbackMarket,
@@ -1131,48 +1101,9 @@ class RevolutionaryAIService: ObservableObject {
     }
 }
 
-// MARK: - 📊 Enhanced Google Sheets Service (SAME AS BEFORE)
-class EnhancedGoogleSheetsService: ObservableObject {
-    @Published var spreadsheetId = RevolutionaryAPIConfig.spreadsheetID
-    @Published var isConnected = true
-    @Published var isSyncing = false
-    @Published var lastSyncDate: Date?
-    @Published var syncStatus = "Connected"
-    
-    func authenticate() {
-        isConnected = true
-        syncStatus = "Connected to Google Sheets"
-        print("✅ Google Sheets ready!")
-    }
-    
-    func uploadItem(_ item: InventoryItem) {
-        print("📤 Uploading to Google Sheets: \(item.name)")
-        // Implementation same as before...
-    }
-    
-    func updateItem(_ item: InventoryItem) {
-        uploadItem(item)
-    }
-    
-    func syncAllItems(_ items: [InventoryItem]) {
-        // Implementation same as before...
-    }
-}
-
-// MARK: - 🏪 Direct eBay Listing Service (SAME AS BEFORE)
-class DirectEbayListingService: ObservableObject {
-    @Published var isListing = false
-    @Published var listingProgress = "Ready to list"
-    @Published var listingURL: String?
-    @Published var isConfigured = false
-    
-    func listDirectlyToEbay(item: InventoryItem, analysis: RevolutionaryAnalysis, completion: @escaping (Bool, String?) -> Void) {
-        // Implementation same as before...
-    }
-}
-// MARK: - 📊 Enhanced Google Sheets Service
-class EnhancedGoogleSheetsService: ObservableObject {
-    @Published var spreadsheetId = RevolutionaryAPIConfig.spreadsheetID
+// MARK: - Google Sheets Service
+class GoogleSheetsService: ObservableObject {
+    @Published var spreadsheetId = APIConfig.spreadsheetID
     @Published var isConnected = true
     @Published var isSyncing = false
     @Published var lastSyncDate: Date?
@@ -1186,7 +1117,6 @@ class EnhancedGoogleSheetsService: ObservableObject {
     
     func uploadItem(_ item: InventoryItem) {
         print("📤 Uploading to Google Sheets: \(item.name) [\(item.inventoryCode)]")
-        // Mock upload implementation
     }
     
     func updateItem(_ item: InventoryItem) {
@@ -1195,24 +1125,22 @@ class EnhancedGoogleSheetsService: ObservableObject {
     
     func syncAllItems(_ items: [InventoryItem]) {
         print("🔄 Syncing \(items.count) items to Google Sheets")
-        // Mock sync implementation
     }
 }
 
-// MARK: - 🏪 Direct eBay Listing Service
-class DirectEbayListingService: ObservableObject {
+// MARK: - eBay Listing Service
+class EbayListingService: ObservableObject {
     @Published var isListing = false
     @Published var listingProgress = "Ready to list"
     @Published var listingURL: String?
     @Published var isConfigured = false
     
-    func listDirectlyToEbay(item: InventoryItem, analysis: RevolutionaryAnalysis, completion: @escaping (Bool, String?) -> Void) {
+    func listDirectlyToEbay(item: InventoryItem, analysis: AnalysisResult, completion: @escaping (Bool, String?) -> Void) {
         DispatchQueue.main.async {
             self.isListing = true
             self.listingProgress = "Uploading to eBay..."
         }
         
-        // Mock eBay listing process
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             self.isListing = false
             self.listingProgress = "Listed successfully"

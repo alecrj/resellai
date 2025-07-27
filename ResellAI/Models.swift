@@ -1,4 +1,4 @@
-// MARK: - Fixed Models.swift with Migration Support
+// MARK: - Fixed Models.swift with Simple Naming
 import SwiftUI
 import Foundation
 
@@ -164,7 +164,6 @@ enum ItemStatus: String, CaseIterable, Codable {
         case "Prospecting", "prospecting", "🔍 Prospecting":
             self = .prospecting
         default:
-            // Default to analyzed for unknown values
             print("⚠️ Unknown ItemStatus: '\(rawValue)', defaulting to analyzed")
             self = .analyzed
         }
@@ -279,7 +278,7 @@ enum SourceLocation: String, CaseIterable {
     }
 }
 
-// MARK: - Analysis Models
+// MARK: - Analysis Models (Updated with Simple Names)
 protocol ItemAnalysis {
     var itemName: String { get }
     var category: String { get }
@@ -366,7 +365,7 @@ struct ProspectAnalysis {
     let holidayDemand: Bool        // Higher demand during holidays
 }
 
-// MARK: - Missing Types for RealAPIServices
+// MARK: - Missing Types for Services
 struct QuickIdentification {
     let itemName: String
     let brand: String
@@ -481,7 +480,7 @@ struct InventoryStatistics {
     }
 }
 
-// MARK: - API Data Models
+// MARK: - API Data Models (Updated Names)
 struct VisionAnalysisResults {
     let detectedCondition: String
     let conditionScore: Double
@@ -490,7 +489,7 @@ struct VisionAnalysisResults {
     let confidenceLevel: Double
 }
 
-struct UltraAIResults {
+struct AIResults {
     let itemName: String
     let brand: String
     let modelNumber: String
@@ -544,8 +543,8 @@ struct ProfitMargins {
     let maxProfitNet: Double
 }
 
-// MARK: - Analysis Results
-struct RevolutionaryAnalysis {
+// MARK: - Analysis Results (Updated Name)
+struct AnalysisResult {
     let itemName: String
     let brand: String
     let modelNumber: String

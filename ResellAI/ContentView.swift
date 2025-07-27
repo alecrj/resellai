@@ -6,9 +6,9 @@ import PhotosUI
 // MARK: - Main Content View
 struct ContentView: View {
     @StateObject private var inventoryManager = InventoryManager()
-    @StateObject private var aiService = RevolutionaryAIService()
-    @StateObject private var googleSheetsService = EnhancedGoogleSheetsService()
-    @StateObject private var ebayListingService = DirectEbayListingService()
+    @StateObject private var aiService = AIService()
+    @StateObject private var googleSheetsService = GoogleSheetsService()
+    @StateObject private var ebayListingService = EbayListingService()
     
     // Homepage mode toggle
     @State private var isProspectingMode = false
@@ -144,14 +144,14 @@ struct BusinessTabView: View {
 // MARK: - AI Analysis View (Business Mode)
 struct AIAnalysisView: View {
     @EnvironmentObject var inventoryManager: InventoryManager
-    @EnvironmentObject var aiService: RevolutionaryAIService
-    @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
-    @EnvironmentObject var ebayListingService: DirectEbayListingService
+    @EnvironmentObject var aiService: AIService
+    @EnvironmentObject var googleSheetsService: GoogleSheetsService
+    @EnvironmentObject var ebayListingService: EbayListingService
     
     @State private var capturedImages: [UIImage] = []
     @State private var showingMultiCamera = false
     @State private var showingPhotoLibrary = false
-    @State private var analysisResult: RevolutionaryAnalysis?
+    @State private var analysisResult: AnalysisResult?
     @State private var showingItemForm = false
     @State private var showingDirectListing = false
     @State private var showingBarcodeLookup = false
@@ -216,7 +216,7 @@ struct AIAnalysisView: View {
                     
                     // Analysis Results
                     if let result = analysisResult {
-                        RevolutionaryAnalysisResultView(analysis: result) {
+                        AnalysisResultView(analysis: result) {
                             showingItemForm = true
                         } onDirectList: {
                             showingDirectListing = true
@@ -243,7 +243,7 @@ struct AIAnalysisView: View {
         }
         .sheet(isPresented: $showingItemForm) {
             if let result = analysisResult {
-                RevolutionaryItemFormView(
+                ItemFormView(
                     analysis: result,
                     onSave: { item in
                         let savedItem = inventoryManager.addItem(item)
@@ -275,7 +275,7 @@ struct AIAnalysisView: View {
         guard !capturedImages.isEmpty else { return }
         
         hapticFeedback(.medium)
-        aiService.revolutionaryAnalysis(capturedImages) { result in
+        aiService.analyzeItem(capturedImages) { result in
             DispatchQueue.main.async {
                 analysisResult = result
             }
@@ -301,7 +301,7 @@ struct AIAnalysisView: View {
 // MARK: - Prospecting View
 struct ProspectingView: View {
     @EnvironmentObject var inventoryManager: InventoryManager
-    @EnvironmentObject var aiService: RevolutionaryAIService
+    @EnvironmentObject var aiService: AIService
     
     @State private var capturedImages: [UIImage] = []
     @State private var showingMultiCamera = false
@@ -534,7 +534,7 @@ struct ProspectingView: View {
 // MARK: - Smart Inventory List View
 struct SmartInventoryListView: View {
     @EnvironmentObject var inventoryManager: InventoryManager
-    @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
+    @EnvironmentObject var googleSheetsService: GoogleSheetsService
     @State private var searchText = ""
     @State private var filterStatus: ItemStatus?
     @State private var showingFilters = false
@@ -1051,9 +1051,9 @@ struct SmartInventoryItemRowView: View {
 
 // Settings View
 struct AppSettingsView: View {
-    @EnvironmentObject var aiService: RevolutionaryAIService
-    @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
-    @EnvironmentObject var ebayListingService: DirectEbayListingService
+    @EnvironmentObject var aiService: AIService
+    @EnvironmentObject var googleSheetsService: GoogleSheetsService
+    @EnvironmentObject var ebayListingService: EbayListingService
     
     var body: some View {
         NavigationView {
@@ -1146,7 +1146,15 @@ struct FeatureStatusRowView: View {
     }
 }
 
-// ContentView.swift - Main app interface (hapticFeedback will be in UIComponents.swift)
+// Haptic feedback function (centralized)
+func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+    let impactFeedback = UIImpactFeedbackGenerator(style: style)
+    impactFeedback.impactOccurred()
+}
+
+extension UIImpactFeedbackGenerator.FeedbackStyle {
+    static let success = UIImpactFeedbackGenerator.FeedbackStyle.heavy
+}
 
 // Preview
 struct ContentView_Previews: PreviewProvider {
