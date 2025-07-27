@@ -173,14 +173,14 @@ struct RevolutionaryAnalysisView: View {
     private func analyzeWithRevolutionaryAI() {
         guard !capturedImages.isEmpty else { return }
         
-        hapticFeedback(.medium)
+        empireHaptic(.medium)
         revolutionaryAI.revolutionaryAnalysis(capturedImages) { result in
             analysisResult = result
         }
     }
     
     private func resetAnalysis() {
-        hapticFeedback(.light)
+        empireHaptic(.light)
         capturedImages = []
         analysisResult = nil
     }
@@ -230,7 +230,7 @@ struct RevolutionaryPhotoPlaceholder: View {
             }
         }
         .onTapGesture {
-            hapticFeedback(.light)
+            empireHaptic(.light)
             onTakePhotos()
         }
     }
@@ -272,7 +272,7 @@ struct RevolutionaryPhotoGallery: View {
                 Spacer()
                 
                 Button(action: {
-                    hapticFeedback(.light)
+                    empireHaptic(.light)
                     deleteCurrentPhoto()
                 }) {
                     Image(systemName: "trash")
@@ -312,7 +312,7 @@ struct RevolutionaryActionButtons: View {
         VStack(spacing: 15) {
             // Multi-Camera Button
             Button(action: {
-                hapticFeedback(.medium)
+                empireHaptic(.medium)
                 onMultiCamera()
             }) {
                 HStack {
@@ -336,7 +336,7 @@ struct RevolutionaryActionButtons: View {
             // Revolutionary Analysis Button
             if hasPhotos {
                 Button(action: {
-                    hapticFeedback(.heavy)
+                    empireHaptic(.heavy)
                     onAnalyze()
                 }) {
                     HStack {
@@ -369,7 +369,7 @@ struct RevolutionaryActionButtons: View {
                 // Reset Button
                 if !isAnalyzing {
                     Button(action: {
-                        hapticFeedback(.light)
+                        empireHaptic(.light)
                         onReset()
                     }) {
                         HStack {
@@ -710,7 +710,7 @@ struct RevolutionaryActionCards: View {
         VStack(spacing: 12) {
             // Add to Inventory Button
             Button(action: {
-                hapticFeedback(.medium)
+                empireHaptic(.medium)
                 onAddToInventory()
             }) {
                 HStack {
@@ -733,7 +733,7 @@ struct RevolutionaryActionCards: View {
             
             // Direct eBay Listing Button
             Button(action: {
-                hapticFeedback(.heavy)
+                empireHaptic(.heavy)
                 onDirectList()
             }) {
                 HStack {
@@ -846,7 +846,7 @@ struct DirectEbayListingView: View {
                     // List Button
                     if !ebayListingService.isListing {
                         Button(action: {
-                            hapticFeedback(.heavy)
+                            empireHaptic(.heavy)
                             listToEbay()
                         }) {
                             HStack {
@@ -875,7 +875,7 @@ struct DirectEbayListingView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        hapticFeedback(.light)
+                        empireHaptic(.light)
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
@@ -1145,14 +1145,14 @@ struct RevolutionaryItemFormView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        hapticFeedback(.light)
+                        empireHaptic(.light)
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        hapticFeedback(.medium)
+                        empireHaptic(.medium)
                         saveRevolutionaryItem()
                     }
                     .disabled(purchasePrice.isEmpty)
@@ -1294,10 +1294,133 @@ struct FeatureStatusRow: View {
     }
 }
 
-// MARK: - Haptic Feedback Helper
-func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-    let impactFeedback = UIImpactFeedbackGenerator(style: style)
-    impactFeedback.impactOccurred()
+// MARK: - Multi-Camera View Controller
+struct MultiCameraViewRepresentable: UIViewControllerRepresentable {
+    let onPhotosSelected: ([UIImage]) -> Void
+    
+    func makeUIViewController(context: Context) -> MultiCameraViewController {
+        let controller = MultiCameraViewController()
+        controller.delegate = context.coordinator
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: MultiCameraViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, MultiCameraDelegate {
+        let parent: MultiCameraViewRepresentable
+        
+        init(_ parent: MultiCameraViewRepresentable) {
+            self.parent = parent
+        }
+        
+        func didCapturePhotos(_ photos: [UIImage]) {
+            parent.onPhotosSelected(photos)
+        }
+    }
+}
+
+protocol MultiCameraDelegate: AnyObject {
+    func didCapturePhotos(_ photos: [UIImage])
+}
+
+class MultiCameraViewController: UIViewController {
+    weak var delegate: MultiCameraDelegate?
+    private var capturedPhotos: [UIImage] = []
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupMultiCameraInterface()
+    }
+    
+    private func setupMultiCameraInterface() {
+        view.backgroundColor = .systemBackground
+        
+        let titleLabel = UILabel()
+        titleLabel.text = "📸 Multi-Photo Capture"
+        titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(titleLabel)
+        
+        let instructionLabel = UILabel()
+        instructionLabel.text = "Take multiple angles for the most accurate analysis"
+        instructionLabel.font = .systemFont(ofSize: 16)
+        instructionLabel.textAlignment = .center
+        instructionLabel.textColor = .systemGray
+        instructionLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(instructionLabel)
+        
+        let cameraButton = UIButton(type: .system)
+        cameraButton.setTitle("📷 Take Photo", for: .normal)
+        cameraButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+        cameraButton.backgroundColor = .systemBlue
+        cameraButton.setTitleColor(.white, for: .normal)
+        cameraButton.layer.cornerRadius = 12
+        cameraButton.translatesAutoresizingMaskIntoConstraints = false
+        cameraButton.addTarget(self, action: #selector(takePhoto), for: .touchUpInside)
+        view.addSubview(cameraButton)
+        
+        let doneButton = UIButton(type: .system)
+        doneButton.setTitle("✅ Done (\(capturedPhotos.count) photos)", for: .normal)
+        doneButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+        doneButton.backgroundColor = .systemGreen
+        doneButton.setTitleColor(.white, for: .normal)
+        doneButton.layer.cornerRadius = 12
+        doneButton.translatesAutoresizingMaskIntoConstraints = false
+        doneButton.addTarget(self, action: #selector(finishCapture), for: .touchUpInside)
+        view.addSubview(doneButton)
+        
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            instructionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            instructionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            cameraButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            cameraButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            cameraButton.widthAnchor.constraint(equalToConstant: 200),
+            cameraButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            doneButton.topAnchor.constraint(equalTo: cameraButton.bottomAnchor, constant: 20),
+            doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            doneButton.widthAnchor.constraint(equalToConstant: 200),
+            doneButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
+    }
+    
+    @objc private func takePhoto() {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+    
+    @objc private func finishCapture() {
+        if !capturedPhotos.isEmpty {
+            delegate?.didCapturePhotos(capturedPhotos)
+            dismiss(animated: true)
+        }
+    }
+}
+
+extension MultiCameraViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        if let image = info[.originalImage] as? UIImage {
+            capturedPhotos.append(image)
+            
+            if let doneButton = view.subviews.compactMap({ $0 as? UIButton }).last {
+                doneButton.setTitle("✅ Done (\(capturedPhotos.count) photos)", for: .normal)
+            }
+        }
+        picker.dismiss(animated: true)
+    }
 }
 
 // MARK: - Preview
