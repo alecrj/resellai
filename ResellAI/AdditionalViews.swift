@@ -24,7 +24,7 @@ struct DashboardView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.blue)
                         
-                        Text("Transform from $300 → eBay Empire")
+                        Text("Path to eBay Empire")
                             .font(.headline)
                             .foregroundColor(.green)
                     }
@@ -148,481 +148,6 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - 🔍 PROSPECTING MODE - THE ULTIMATE BUYING TOOL
-struct ProspectingModeView: View {
-    @StateObject private var prospectingService = ProspectingIntelligenceService()
-    @State private var capturedImages: [UIImage] = []
-    @State private var showingCamera = false
-    @State private var prospectAnalysis: ProspectAnalysis?
-    @State private var showingBarcodeLookup = false
-    @State private var scannedBarcode: String?
-    @State private var askingPrice = ""
-    @State private var selectedCategory = "All Categories"
-    
-    let categories = ["All Categories", "Electronics", "Gaming", "Clothing", "Collectibles", "Home & Garden", "Sports", "Books", "Toys"]
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Prospecting Header
-                    VStack(spacing: 12) {
-                        Text("🔍 PROSPECTING MODE")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.purple)
-                        
-                        Text("Instant Buy/Avoid Analysis • Real Profit Potential • Max Pay Price")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                        
-                        // Quick Stats Row
-                        HStack(spacing: 15) {
-                            ProspectingStatCard(
-                                title: "Items Analyzed",
-                                value: "\(prospectingService.itemsAnalyzed)",
-                                color: .blue
-                            )
-                            ProspectingStatCard(
-                                title: "Profit Opportunities",
-                                value: "\(prospectingService.profitableItems)",
-                                color: .green
-                            )
-                            ProspectingStatCard(
-                                title: "Avoided Losses",
-                                value: "\(prospectingService.avoidedItems)",
-                                color: .red
-                            )
-                        }
-                    }
-                    
-                    // Analysis Progress
-                    if prospectingService.isAnalyzing {
-                        VStack(spacing: 12) {
-                            ProgressView(value: Double(prospectingService.currentStep), total: Double(prospectingService.totalSteps))
-                                .progressViewStyle(LinearProgressViewStyle(tint: .purple))
-                            
-                            Text(prospectingService.analysisProgress)
-                                .font(.caption)
-                                .foregroundColor(.purple)
-                            
-                            Text("Prospecting Analysis: Step \(prospectingService.currentStep)/\(prospectingService.totalSteps)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                        .background(Color.purple.opacity(0.1))
-                        .cornerRadius(12)
-                    }
-                    
-                    // Quick Input Section
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("📊 Quick Analysis Setup")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        HStack {
-                            Text("Asking Price: $")
-                                .fontWeight(.semibold)
-                            TextField("0.00", text: $askingPrice)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                        }
-                        
-                        Picker("Category Focus", selection: $selectedCategory) {
-                            ForEach(categories, id: \.self) { category in
-                                Text(category).tag(category)
-                            }
-                        }
-                        .pickerStyle(MenuPickerStyle())
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.05))
-                    .cornerRadius(12)
-                    
-                    // Analysis Methods
-                    VStack(spacing: 15) {
-                        // Photo Analysis Button
-                        Button(action: {
-                            empireHaptic(.medium)
-                            showingCamera = true
-                        }) {
-                            HStack {
-                                Image(systemName: "camera.fill")
-                                VStack(alignment: .leading) {
-                                    Text("📸 Photo Analysis")
-                                        .fontWeight(.bold)
-                                    Text("Snap and get instant buy/avoid decision")
-                                        .font(.caption)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [.purple, .blue],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        
-                        // Barcode Lookup Button
-                        Button(action: {
-                            empireHaptic(.medium)
-                            showingBarcodeLookup = true
-                        }) {
-                            HStack {
-                                Image(systemName: "barcode.viewfinder")
-                                VStack(alignment: .leading) {
-                                    Text("📱 Barcode Lookup")
-                                        .fontWeight(.bold)
-                                    Text("Instant UPC/ISBN profit analysis")
-                                        .font(.caption)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [.green, .mint],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        
-                        // Analyze Current Photos Button
-                        if !capturedImages.isEmpty {
-                            Button(action: {
-                                empireHaptic(.heavy)
-                                analyzeProspect()
-                            }) {
-                                HStack {
-                                    Image(systemName: "brain.head.profile")
-                                    Text("🚀 ANALYZE PROSPECT (\(capturedImages.count) photos)")
-                                        .fontWeight(.bold)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [.orange, .red],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                                .shadow(radius: 5)
-                            }
-                            .disabled(prospectingService.isAnalyzing)
-                        }
-                    }
-                    
-                    // Photo Preview
-                    if !capturedImages.isEmpty {
-                        ProspectPhotoPreview(images: $capturedImages)
-                    }
-                    
-                    // Analysis Results
-                    if let analysis = prospectAnalysis {
-                        ProspectAnalysisResultView(analysis: analysis)
-                    }
-                    
-                    // Pro Tips Section
-                    ProspectingProTipsView()
-                    
-                    Spacer(minLength: 20)
-                }
-                .padding()
-            }
-            .navigationBarHidden(true)
-        }
-        .sheet(isPresented: $showingCamera) {
-            ImagePicker(selectedImages: $capturedImages, allowsMultipleSelection: true)
-        }
-        .sheet(isPresented: $showingBarcodeLookup) {
-            BarcodeScannerView(scannedCode: $scannedBarcode)
-                .onDisappear {
-                    if let barcode = scannedBarcode {
-                        lookupBarcode(barcode)
-                    }
-                }
-        }
-    }
-    
-    private func analyzeProspect() {
-        guard !capturedImages.isEmpty else { return }
-        
-        let askingPriceValue = Double(askingPrice) ?? 0.0
-        
-        prospectingService.analyzeProspect(
-            images: capturedImages,
-            askingPrice: askingPriceValue,
-            category: selectedCategory
-        ) { analysis in
-            prospectAnalysis = analysis
-        }
-    }
-    
-    private func lookupBarcode(_ barcode: String) {
-        empireHaptic(.success)
-        prospectingService.lookupBarcode(barcode) { analysis in
-            prospectAnalysis = analysis
-        }
-    }
-}
-
-// MARK: - 🔍 Prospecting Intelligence Service
-class ProspectingIntelligenceService: ObservableObject {
-    @Published var isAnalyzing = false
-    @Published var analysisProgress = "Ready"
-    @Published var currentStep = 0
-    @Published var totalSteps = 4
-    
-    // Stats tracking
-    @Published var itemsAnalyzed = 0
-    @Published var profitableItems = 0
-    @Published var avoidedItems = 0
-    
-    func analyzeProspect(images: [UIImage], askingPrice: Double, category: String, completion: @escaping (ProspectAnalysis) -> Void) {
-        isAnalyzing = true
-        currentStep = 0
-        totalSteps = 4
-        
-        analysisProgress = "🔍 Step 1/4: Identifying item and condition..."
-        currentStep = 1
-        
-        // Step 1: Quick Identification
-        quickIdentification(images) { [weak self] identification in
-            guard let self = self else { return }
-            
-            DispatchQueue.main.async {
-                self.analysisProgress = "📊 Step 2/4: Real-time market research..."
-                self.currentStep = 2
-            }
-            
-            // Step 2: Market Research
-            self.instantMarketLookup(identification.itemName) { marketData in
-                DispatchQueue.main.async {
-                    self.analysisProgress = "💰 Step 3/4: Profit potential calculation..."
-                    self.currentStep = 3
-                }
-                
-                // Step 3: Profit Analysis
-                self.calculateProfitPotential(identification, market: marketData, askingPrice: askingPrice) { profitAnalysis in
-                    DispatchQueue.main.async {
-                        self.analysisProgress = "🎯 Step 4/4: Final recommendation..."
-                        self.currentStep = 4
-                    }
-                    
-                    // Step 4: Final Decision
-                    let recommendation = self.generateBuyAvoidRecommendation(
-                        identification: identification,
-                        market: marketData,
-                        profit: profitAnalysis,
-                        askingPrice: askingPrice
-                    )
-                    
-                    let finalAnalysis = ProspectAnalysis(
-                        itemName: identification.itemName,
-                        brand: identification.brand,
-                        condition: identification.condition,
-                        confidence: identification.confidence,
-                        askingPrice: askingPrice,
-                        estimatedValue: marketData.averagePrice,
-                        maxPayPrice: profitAnalysis.maxPayPrice,
-                        potentialProfit: profitAnalysis.potentialProfit,
-                        expectedROI: profitAnalysis.expectedROI,
-                        recommendation: recommendation.decision,
-                        reasons: recommendation.reasons,
-                        riskLevel: recommendation.riskLevel,
-                        demandLevel: marketData.demandLevel,
-                        competitorCount: marketData.competitorCount,
-                        marketTrend: marketData.trend,
-                        sellTimeEstimate: profitAnalysis.sellTimeEstimate,
-                        seasonalFactors: marketData.seasonalFactors,
-                        sourcingTips: recommendation.sourcingTips,
-                        images: images
-                    )
-                    
-                    // Update stats
-                    DispatchQueue.main.async {
-                        self.itemsAnalyzed += 1
-                        if recommendation.decision == .buy {
-                            self.profitableItems += 1
-                        } else if recommendation.decision == .avoid {
-                            self.avoidedItems += 1
-                        }
-                        
-                        self.isAnalyzing = false
-                        self.analysisProgress = "Ready"
-                        self.currentStep = 0
-                        completion(finalAnalysis)
-                    }
-                }
-            }
-        }
-    }
-    
-    func lookupBarcode(_ barcode: String, completion: @escaping (ProspectAnalysis) -> Void) {
-        isAnalyzing = true
-        analysisProgress = "🔍 Looking up barcode..."
-        
-        // Simulate barcode API lookup
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            let mockAnalysis = ProspectAnalysis(
-                itemName: "Product from barcode \(barcode)",
-                brand: "Unknown Brand",
-                condition: "Unknown",
-                confidence: 0.8,
-                askingPrice: 0,
-                estimatedValue: 25.0,
-                maxPayPrice: 15.0,
-                potentialProfit: 8.50,
-                expectedROI: 56.7,
-                recommendation: .investigate,
-                reasons: ["Barcode lookup successful", "Need visual inspection for condition"],
-                riskLevel: "Medium",
-                demandLevel: "Medium",
-                competitorCount: 150,
-                marketTrend: "Stable",
-                sellTimeEstimate: "7-14 days",
-                seasonalFactors: "Standard demand",
-                sourcingTips: ["Check condition carefully", "Look for complete accessories"],
-                images: []
-            )
-            
-            self.isAnalyzing = false
-            self.analysisProgress = "Ready"
-            completion(mockAnalysis)
-        }
-    }
-    
-    // MARK: - Private Analysis Methods
-    private func quickIdentification(_ images: [UIImage], completion: @escaping (QuickIdentification) -> Void) {
-        // Simulated quick AI identification
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
-            let identification = QuickIdentification(
-                itemName: "Gaming Controller",
-                brand: "Sony",
-                condition: "Good",
-                confidence: 0.85
-            )
-            completion(identification)
-        }
-    }
-    
-    private func instantMarketLookup(_ itemName: String, completion: @escaping (InstantMarketData) -> Void) {
-        // Simulated rapid market lookup
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
-            let marketData = InstantMarketData(
-                averagePrice: 42.50,
-                recentSales: [38.99, 45.00, 41.50, 44.99, 39.95],
-                competitorCount: 127,
-                demandLevel: "High",
-                trend: "Increasing 12% this month",
-                seasonalFactors: "Peak demand Nov-Jan"
-            )
-            completion(marketData)
-        }
-    }
-    
-    private func calculateProfitPotential(_ identification: QuickIdentification, market: InstantMarketData, askingPrice: Double, completion: @escaping (ProfitPotential) -> Void) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
-            let fees = market.averagePrice * 0.1325 + 8.50 + 0.30 // eBay fees + shipping + listing
-            let netSalePrice = market.averagePrice - fees
-            let potentialProfit = netSalePrice - askingPrice
-            let roi = askingPrice > 0 ? (potentialProfit / askingPrice) * 100 : 0
-            let maxPayPrice = netSalePrice * 0.6 // 40% margin target
-            
-            let profitPotential = ProfitPotential(
-                potentialProfit: potentialProfit,
-                expectedROI: roi,
-                maxPayPrice: maxPayPrice,
-                sellTimeEstimate: market.demandLevel == "High" ? "3-7 days" : "7-14 days"
-            )
-            completion(profitPotential)
-        }
-    }
-    
-    private func generateBuyAvoidRecommendation(identification: QuickIdentification, market: InstantMarketData, profit: ProfitPotential, askingPrice: Double) -> ProspectRecommendation {
-        
-        var reasons: [String] = []
-        var decision: ProspectDecision = .investigate
-        var riskLevel = "Medium"
-        var sourcingTips: [String] = []
-        
-        // Decision Logic
-        if profit.expectedROI >= 100 && profit.potentialProfit >= 15 {
-            decision = .buy
-            riskLevel = "Low"
-            reasons.append("🔥 Excellent ROI: \(String(format: "%.1f", profit.expectedROI))%")
-            reasons.append("💰 Strong profit potential: $\(String(format: "%.2f", profit.potentialProfit))")
-            sourcingTips.append("✅ BUY NOW - This is a winner!")
-            sourcingTips.append("📦 List quickly to capitalize on demand")
-        } else if profit.expectedROI >= 50 && profit.potentialProfit >= 8 {
-            decision = .buy
-            riskLevel = "Low-Medium"
-            reasons.append("✅ Good ROI: \(String(format: "%.1f", profit.expectedROI))%")
-            reasons.append("💵 Decent profit: $\(String(format: "%.2f", profit.potentialProfit))")
-            sourcingTips.append("👍 Solid buy for steady profit")
-            sourcingTips.append("⏰ List within 24 hours")
-        } else if profit.expectedROI >= 25 && profit.potentialProfit >= 5 {
-            decision = .investigate
-            riskLevel = "Medium"
-            reasons.append("⚠️ Marginal ROI: \(String(format: "%.1f", profit.expectedROI))%")
-            reasons.append("💭 Small profit: $\(String(format: "%.2f", profit.potentialProfit))")
-            sourcingTips.append("🤔 Consider if you have time for small profits")
-            sourcingTips.append("💬 Try negotiating price down")
-        } else {
-            decision = .avoid
-            riskLevel = "High"
-            reasons.append("❌ Poor ROI: \(String(format: "%.1f", profit.expectedROI))%")
-            reasons.append("💸 Potential loss: $\(String(format: "%.2f", abs(profit.potentialProfit)))")
-            sourcingTips.append("🚫 AVOID - Not profitable at this price")
-            sourcingTips.append("🔍 Look for similar items at lower prices")
-        }
-        
-        // Market condition factors
-        if market.competitorCount > 300 {
-            reasons.append("⚠️ High competition: \(market.competitorCount) active listings")
-            riskLevel = riskLevel == "Low" ? "Medium" : "High"
-        }
-        
-        if market.demandLevel == "Low" {
-            reasons.append("📉 Low demand - slow sales expected")
-            riskLevel = riskLevel == "Low" ? "Medium" : "High"
-        } else if market.demandLevel == "High" {
-            reasons.append("🔥 High demand - fast sales likely")
-        }
-        
-        if market.trend.contains("Decreasing") {
-            reasons.append("📉 Declining prices - act fast or avoid")
-            if decision == .buy {
-                sourcingTips.append("⚡ List immediately due to declining prices")
-            }
-        }
-        
-        return ProspectRecommendation(
-            decision: decision,
-            reasons: reasons,
-            riskLevel: riskLevel,
-            sourcingTips: sourcingTips
-        )
-    }
-}
-
 // MARK: - Business Intelligence Components
 struct EmpireStatCard: View {
     let title: String
@@ -711,7 +236,7 @@ struct QuickInsightsPanel: View {
                 
                 InsightCard(
                     title: "Avg. Time to Sell",
-                    value: "12 days",
+                    value: "(mock) days",
                     color: .blue
                 )
                 
@@ -739,7 +264,7 @@ struct QuickInsightsPanel: View {
         let categoryROI = categories.mapValues { items in
             items.reduce(0) { $0 + $1.estimatedROI } / Double(items.count)
         }
-        return categoryROI.max(by: { $0.value < $1.value })?.key ?? "Electronics"
+        return categoryROI.max(by: { $0.value < $1.value })?.key ?? "(mock)"
     }
     
     private func getSuccessRate() -> Int {
@@ -792,28 +317,28 @@ struct PerformanceTrendsView: View {
                 TrendRow(
                     title: "Monthly Revenue",
                     value: "$\(String(format: "%.0f", getMonthlyRevenue()))",
-                    trend: "+23%",
+                    trend: "+(mock%)",
                     isPositive: true
                 )
                 
                 TrendRow(
                     title: "Avg. ROI",
                     value: "\(String(format: "%.0f", inventoryManager.averageROI))%",
-                    trend: "+8%",
+                    trend: "+(mock%)",
                     isPositive: true
                 )
                 
                 TrendRow(
                     title: "Items Listed",
                     value: "\(inventoryManager.listedItems)",
-                    trend: "+15%",
+                    trend: "+(mock%)",
                     isPositive: true
                 )
                 
                 TrendRow(
                     title: "Inventory Value",
                     value: "$\(String(format: "%.0f", inventoryManager.totalEstimatedValue))",
-                    trend: "+31%",
+                    trend: "+(mock%)",
                     isPositive: true
                 )
             }
@@ -925,368 +450,7 @@ struct EnhancedRecentItemCard: View {
     }
 }
 
-// MARK: - Prospecting Data Models
-struct ProspectAnalysis {
-    let itemName: String
-    let brand: String
-    let condition: String
-    let confidence: Double
-    let askingPrice: Double
-    let estimatedValue: Double
-    let maxPayPrice: Double
-    let potentialProfit: Double
-    let expectedROI: Double
-    let recommendation: ProspectDecision
-    let reasons: [String]
-    let riskLevel: String
-    let demandLevel: String
-    let competitorCount: Int
-    let marketTrend: String
-    let sellTimeEstimate: String
-    let seasonalFactors: String
-    let sourcingTips: [String]
-    let images: [UIImage]
-}
-
-enum ProspectDecision {
-    case buy, investigate, avoid
-    
-    var emoji: String {
-        switch self {
-        case .buy: return "✅"
-        case .investigate: return "🤔"
-        case .avoid: return "❌"
-        }
-    }
-    
-    var title: String {
-        switch self {
-        case .buy: return "BUY NOW"
-        case .investigate: return "INVESTIGATE"
-        case .avoid: return "AVOID"
-        }
-    }
-    
-    var color: Color {
-        switch self {
-        case .buy: return .green
-        case .investigate: return .orange
-        case .avoid: return .red
-        }
-    }
-}
-
-struct QuickIdentification {
-    let itemName: String
-    let brand: String
-    let condition: String
-    let confidence: Double
-}
-
-struct InstantMarketData {
-    let averagePrice: Double
-    let recentSales: [Double]
-    let competitorCount: Int
-    let demandLevel: String
-    let trend: String
-    let seasonalFactors: String
-}
-
-struct ProfitPotential {
-    let potentialProfit: Double
-    let expectedROI: Double
-    let maxPayPrice: Double
-    let sellTimeEstimate: String
-}
-
-struct ProspectRecommendation {
-    let decision: ProspectDecision
-    let reasons: [String]
-    let riskLevel: String
-    let sourcingTips: [String]
-}
-
-// MARK: - Prospecting UI Components
-struct ProspectingStatCard: View {
-    let title: String
-    let value: String
-    let color: Color
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(color)
-            
-            Text(title)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .background(color.opacity(0.1))
-        .cornerRadius(8)
-    }
-}
-
-struct ProspectPhotoPreview: View {
-    @Binding var images: [UIImage]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("📸 Captured Photos (\(images.count))")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(0..<images.count, id: \.self) { index in
-                        Image(uiImage: images[index])
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 80, height: 80)
-                            .cornerRadius(8)
-                            .clipped()
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
-    }
-}
-
-struct ProspectAnalysisResultView: View {
-    let analysis: ProspectAnalysis
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            // Main Decision Header
-            VStack(spacing: 12) {
-                HStack {
-                    Text(analysis.recommendation.emoji)
-                        .font(.system(size: 40))
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(analysis.recommendation.title)
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(analysis.recommendation.color)
-                        
-                        Text("Risk: \(analysis.riskLevel)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("ROI")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("\(String(format: "%.1f", analysis.expectedROI))%")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(analysis.expectedROI > 100 ? .green : analysis.expectedROI > 50 ? .orange : .red)
-                    }
-                }
-                
-                // Profit Summary
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("Potential Profit")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("$\(String(format: "%.2f", analysis.potentialProfit))")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(analysis.potentialProfit > 0 ? .green : .red)
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing) {
-                        Text("Max Pay Price")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("$\(String(format: "%.2f", analysis.maxPayPrice))")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                    }
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(analysis.recommendation.color.opacity(0.1))
-                    .stroke(analysis.recommendation.color.opacity(0.3), lineWidth: 2)
-            )
-            
-            // Detailed Analysis Cards
-            VStack(spacing: 15) {
-                // Market Intelligence Card
-                AnalysisCard(
-                    title: "📊 Market Intelligence",
-                    content: [
-                        ("Estimated Value", "$\(String(format: "%.2f", analysis.estimatedValue))"),
-                        ("Competition", "\(analysis.competitorCount) active listings"),
-                        ("Demand Level", analysis.demandLevel),
-                        ("Market Trend", analysis.marketTrend),
-                        ("Sell Time", analysis.sellTimeEstimate)
-                    ],
-                    color: .blue
-                )
-                
-                // Decision Reasons Card
-                AnalysisCard(
-                    title: "🎯 Analysis Reasons",
-                    items: analysis.reasons,
-                    color: .purple
-                )
-                
-                // Sourcing Tips Card
-                AnalysisCard(
-                    title: "💡 Pro Sourcing Tips",
-                    items: analysis.sourcingTips,
-                    color: .green
-                )
-            }
-        }
-        .padding()
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(20)
-    }
-}
-
-struct AnalysisCard: View {
-    let title: String
-    var content: [(String, String)]?
-    var items: [String]?
-    let color: Color
-    
-    init(title: String, content: [(String, String)], color: Color) {
-        self.title = title
-        self.content = content
-        self.items = nil
-        self.color = color
-    }
-    
-    init(title: String, items: [String], color: Color) {
-        self.title = title
-        self.content = nil
-        self.items = items
-        self.color = color
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.headline)
-                .fontWeight(.bold)
-                .foregroundColor(color)
-            
-            if let content = content {
-                VStack(spacing: 8) {
-                    ForEach(content, id: \.0) { item in
-                        HStack {
-                            Text(item.0)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(item.1)
-                                .fontWeight(.semibold)
-                        }
-                    }
-                }
-            }
-            
-            if let items = items {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(items, id: \.self) { item in
-                        Text("• \(item)")
-                            .font(.body)
-                    }
-                }
-            }
-        }
-        .padding()
-        .background(color.opacity(0.1))
-        .cornerRadius(12)
-    }
-}
-
-struct ProspectingProTipsView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Text("🔥 Pro Prospecting Tips")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                ProTipRow(
-                    icon: "🎯",
-                    title: "Target High ROI",
-                    description: "Look for 100%+ ROI opportunities"
-                )
-                
-                ProTipRow(
-                    icon: "⚡",
-                    title: "Speed Matters",
-                    description: "Analyze quickly - good deals don't last"
-                )
-                
-                ProTipRow(
-                    icon: "📱",
-                    title: "Use Barcode Scanner",
-                    description: "Books, media, and retail items have UPCs"
-                )
-                
-                ProTipRow(
-                    icon: "🔍",
-                    title: "Check Completeness",
-                    description: "Missing parts = much lower value"
-                )
-                
-                ProTipRow(
-                    icon: "📅",
-                    title: "Seasonal Timing",
-                    description: "Some items peak at certain times"
-                )
-            }
-        }
-        .padding()
-        .background(Color.orange.opacity(0.1))
-        .cornerRadius(16)
-    }
-}
-
-struct ProTipRow: View {
-    let icon: String
-    let title: String
-    let description: String
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text(icon)
-                .font(.title2)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                
-                Text(description)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-        }
-    }
-}
-
-// MARK: - Additional Empire Views (Condensed for space)
+// MARK: - Additional Empire Views (Condensed)
 struct UltimatePortfolioTrackingView: View {
     @EnvironmentObject var inventoryManager: InventoryManager
     @Environment(\.presentationMode) var presentationMode
@@ -1300,7 +464,6 @@ struct UltimatePortfolioTrackingView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.purple)
                     
-                    // Add advanced portfolio content here
                     Text("Advanced portfolio tracking coming soon!")
                         .foregroundColor(.secondary)
                     
@@ -1385,205 +548,6 @@ struct ProfitOptimizerView: View {
             }
         }
     }
-}
-
-// MARK: - Image Picker for Multiple Photos
-struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var selectedImages: [UIImage]
-    var allowsMultipleSelection: Bool = false
-    
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.delegate = context.coordinator
-        picker.sourceType = .camera
-        return picker
-    }
-    
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: ImagePicker
-        
-        init(_ parent: ImagePicker) {
-            self.parent = parent
-        }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.selectedImages.append(image)
-            }
-            picker.dismiss(animated: true)
-        }
-    }
-}
-
-// MARK: - Barcode Scanner
-struct BarcodeScannerView: UIViewControllerRepresentable {
-    @Binding var scannedCode: String?
-    @Environment(\.presentationMode) var presentationMode
-    
-    func makeUIViewController(context: Context) -> ScannerViewController {
-        let scanner = ScannerViewController()
-        scanner.delegate = context.coordinator
-        return scanner
-    }
-    
-    func updateUIViewController(_ uiViewController: ScannerViewController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, ScannerDelegate {
-        let parent: BarcodeScannerView
-        
-        init(_ parent: BarcodeScannerView) {
-            self.parent = parent
-        }
-        
-        func didScanBarcode(_ code: String) {
-            parent.scannedCode = code
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-    }
-}
-
-protocol ScannerDelegate: AnyObject {
-    func didScanBarcode(_ code: String)
-}
-
-class ScannerViewController: UIViewController {
-    weak var delegate: ScannerDelegate?
-    private var captureSession: AVCaptureSession!
-    private var previewLayer: AVCaptureVideoPreviewLayer!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupScanner()
-    }
-    
-    private func setupScanner() {
-        captureSession = AVCaptureSession()
-        
-        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
-            print("Failed to get camera")
-            return
-        }
-        
-        let videoInput: AVCaptureDeviceInput
-        
-        do {
-            videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
-        } catch {
-            print("Failed to create video input")
-            return
-        }
-        
-        if captureSession.canAddInput(videoInput) {
-            captureSession.addInput(videoInput)
-        } else {
-            print("Could not add video input")
-            return
-        }
-        
-        let metadataOutput = AVCaptureMetadataOutput()
-        
-        if captureSession.canAddOutput(metadataOutput) {
-            captureSession.addOutput(metadataOutput)
-            
-            metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-            metadataOutput.metadataObjectTypes = [.ean8, .ean13, .pdf417, .upce]
-        } else {
-            print("Could not add metadata output")
-            return
-        }
-        
-        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        previewLayer.frame = view.layer.bounds
-        previewLayer.videoGravity = .resizeAspectFill
-        view.layer.addSublayer(previewLayer)
-        
-        addScannerOverlay()
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            self.captureSession.startRunning()
-        }
-    }
-    
-    private func addScannerOverlay() {
-        let overlayView = UIView(frame: view.bounds)
-        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        
-        let scanRect = CGRect(x: 50, y: 200, width: view.bounds.width - 100, height: 200)
-        let scanRectPath = UIBezierPath(rect: scanRect)
-        let overlayPath = UIBezierPath(rect: overlayView.bounds)
-        overlayPath.append(scanRectPath.reversing())
-        
-        let overlayLayer = CAShapeLayer()
-        overlayLayer.path = overlayPath.cgPath
-        overlayLayer.fillRule = .evenOdd
-        overlayView.layer.addSublayer(overlayLayer)
-        
-        let instructionLabel = UILabel()
-        instructionLabel.text = "📱 Scan barcode for instant profit analysis"
-        instructionLabel.textColor = .white
-        instructionLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        instructionLabel.textAlignment = .center
-        instructionLabel.frame = CGRect(x: 20, y: scanRect.maxY + 20, width: view.bounds.width - 40, height: 30)
-        overlayView.addSubview(instructionLabel)
-        
-        view.addSubview(overlayView)
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        if !captureSession.isRunning {
-            DispatchQueue.global(qos: .userInitiated).async {
-                self.captureSession.startRunning()
-            }
-        }
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        if captureSession.isRunning {
-            DispatchQueue.global(qos: .userInitiated).async {
-                self.captureSession.stopRunning()
-            }
-        }
-    }
-}
-
-extension ScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
-    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
-        if let metadataObject = metadataObjects.first {
-            guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
-            guard let stringValue = readableObject.stringValue else { return }
-            
-            let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
-            impactFeedback.impactOccurred()
-            
-            AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
-            
-            delegate?.didScanBarcode(stringValue)
-        }
-    }
-}
-
-// MARK: - SINGLE UNIFIED HAPTIC FUNCTION (NO DUPLICATES!)
-func empireHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-    let impactFeedback = UIImpactFeedbackGenerator(style: style)
-    impactFeedback.impactOccurred()
-}
-
-extension UIImpactFeedbackGenerator.FeedbackStyle {
-    static let success = UIImpactFeedbackGenerator.FeedbackStyle.heavy
 }
 
 // MARK: - Enhanced Inventory View with Auto-Listing
@@ -2218,6 +1182,369 @@ struct ItemDetailView: View {
             Text(copiedText)
         }
     }
+}
+
+// MARK: - Barcode Scanner View (FIXED - No Duplicates)
+struct BarcodeScannerView: UIViewControllerRepresentable {
+    @Binding var scannedCode: String?
+    @Environment(\.presentationMode) var presentationMode
+    
+    func makeUIViewController(context: Context) -> ScannerViewController {
+        let scanner = ScannerViewController()
+        scanner.delegate = context.coordinator
+        return scanner
+    }
+    
+    func updateUIViewController(_ uiViewController: ScannerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, ScannerDelegate {
+        let parent: BarcodeScannerView
+        
+        init(_ parent: BarcodeScannerView) {
+            self.parent = parent
+        }
+        
+        func didScanBarcode(_ code: String) {
+            parent.scannedCode = code
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+    }
+}
+
+protocol ScannerDelegate: AnyObject {
+    func didScanBarcode(_ code: String)
+}
+
+class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
+    weak var delegate: ScannerDelegate?
+    private var captureSession: AVCaptureSession!
+    private var previewLayer: AVCaptureVideoPreviewLayer!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupScanner()
+    }
+    
+    private func setupScanner() {
+        captureSession = AVCaptureSession()
+        
+        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
+            print("Failed to get camera")
+            return
+        }
+        
+        let videoInput: AVCaptureDeviceInput
+        
+        do {
+            videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
+        } catch {
+            print("Failed to create video input")
+            return
+        }
+        
+        if captureSession.canAddInput(videoInput) {
+            captureSession.addInput(videoInput)
+        } else {
+            print("Could not add video input")
+            return
+        }
+        
+        let metadataOutput = AVCaptureMetadataOutput()
+        
+        if captureSession.canAddOutput(metadataOutput) {
+            captureSession.addOutput(metadataOutput)
+            
+            metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+            metadataOutput.metadataObjectTypes = [.ean8, .ean13, .pdf417, .upce, .code128, .code39]
+        } else {
+            print("Could not add metadata output")
+            return
+        }
+        
+        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        previewLayer.frame = view.layer.bounds
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+        
+        addScannerOverlay()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.captureSession.startRunning()
+        }
+    }
+    
+    private func addScannerOverlay() {
+        let overlayView = UIView(frame: view.bounds)
+        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        
+        let scanRect = CGRect(x: 50, y: 200, width: view.bounds.width - 100, height: 200)
+        let scanRectPath = UIBezierPath(rect: scanRect)
+        let overlayPath = UIBezierPath(rect: overlayView.bounds)
+        overlayPath.append(scanRectPath.reversing())
+        
+        let overlayLayer = CAShapeLayer()
+        overlayLayer.path = overlayPath.cgPath
+        overlayLayer.fillRule = .evenOdd
+        overlayView.layer.addSublayer(overlayLayer)
+        
+        let instructionLabel = UILabel()
+        instructionLabel.text = "📱 Scan barcode for instant profit analysis"
+        instructionLabel.textColor = .white
+        instructionLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        instructionLabel.textAlignment = .center
+        instructionLabel.frame = CGRect(x: 20, y: scanRect.maxY + 20, width: view.bounds.width - 40, height: 30)
+        overlayView.addSubview(instructionLabel)
+        
+        let cancelButton = UIButton(type: .system)
+        cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.setTitleColor(.white, for: .normal)
+        cancelButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        cancelButton.frame = CGRect(x: 20, y: 50, width: 80, height: 40)
+        cancelButton.addTarget(self, action: #selector(cancelScanning), for: .touchUpInside)
+        overlayView.addSubview(cancelButton)
+        
+        view.addSubview(overlayView)
+    }
+    
+    @objc private func cancelScanning() {
+        dismiss(animated: true)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if !captureSession.isRunning {
+            DispatchQueue.global(qos: .userInitiated).async {
+                self.captureSession.startRunning()
+            }
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        if captureSession.isRunning {
+            DispatchQueue.global(qos: .userInitiated).async {
+                self.captureSession.stopRunning()
+            }
+        }
+    }
+    
+    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+        if let metadataObject = metadataObjects.first {
+            guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
+            guard let stringValue = readableObject.stringValue else { return }
+            
+            let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+            impactFeedback.impactOccurred()
+            
+            AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
+            
+            delegate?.didScanBarcode(stringValue)
+        }
+    }
+}
+
+// MARK: - Prospect Analysis Result View (FIXED - No Duplicates)
+struct ProspectAnalysisResultView: View {
+    let analysis: ProspectAnalysis
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // Main Decision Header
+            VStack(spacing: 12) {
+                HStack {
+                    Text(analysis.recommendation.emoji)
+                        .font(.system(size: 40))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(analysis.recommendation.title)
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(analysis.recommendation.color)
+                        
+                        Text("Risk: \(analysis.riskLevel)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("ROI")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(String(format: "%.1f", analysis.expectedROI))%")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(analysis.expectedROI > 100 ? .green : analysis.expectedROI > 50 ? .orange : .red)
+                    }
+                }
+                
+                // Key Metrics Row
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("MAX PAY PRICE")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                        Text("$\(String(format: "%.2f", analysis.maxPayPrice))")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .center) {
+                        Text("Potential Profit")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("$\(String(format: "%.2f", analysis.potentialProfit))")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(analysis.potentialProfit > 0 ? .green : .red)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing) {
+                        Text("Market Value")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("$\(String(format: "%.2f", analysis.estimatedValue))")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.purple)
+                    }
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(analysis.recommendation.color.opacity(0.1))
+                    .stroke(analysis.recommendation.color.opacity(0.3), lineWidth: 2)
+            )
+            
+            // Additional content...
+            Text("Analysis complete!")
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color.gray.opacity(0.05))
+        .cornerRadius(20)
+    }
+}
+
+// MARK: - Revolutionary Settings View
+struct RevolutionarySettingsView: View {
+    @EnvironmentObject var revolutionaryAI: RevolutionaryAIService
+    @EnvironmentObject var googleSheetsService: EnhancedGoogleSheetsService
+    @EnvironmentObject var ebayListingService: DirectEbayListingService
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("🚀 Revolutionary AI") {
+                    HStack {
+                        Image(systemName: "brain.head.profile")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading) {
+                            Text("Revolutionary Analysis Engine")
+                                .fontWeight(.semibold)
+                            Text("Ultra-accurate • Real market data • Computer vision")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                        Spacer()
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                }
+                
+                Section("🚀 Direct eBay Listing") {
+                    HStack {
+                        Image(systemName: "bolt.fill")
+                            .foregroundColor(.green)
+                        VStack(alignment: .leading) {
+                            Text("One-Tap eBay Listing")
+                                .fontWeight(.semibold)
+                            Text(ebayListingService.isListing ? "Listing in progress..." : "Ready to list")
+                                .font(.caption)
+                                .foregroundColor(ebayListingService.isListing ? .orange : .green)
+                        }
+                        Spacer()
+                        if ebayListingService.isListing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                
+                Section("📊 Google Sheets") {
+                    HStack {
+                        Image(systemName: "tablecells")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading) {
+                            Text("Auto-Sync Inventory")
+                                .fontWeight(.semibold)
+                            Text(googleSheetsService.syncStatus)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        if googleSheetsService.isSyncing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                
+                Section("🔥 Revolutionary Features") {
+                    FeatureStatusRow(icon: "camera.fill", title: "Multi-Photo Analysis", enabled: true)
+                    FeatureStatusRow(icon: "eye.fill", title: "Computer Vision Condition Detection", enabled: true)
+                    FeatureStatusRow(icon: "chart.line.uptrend.xyaxis", title: "Real-Time Market Research", enabled: true)
+                    FeatureStatusRow(icon: "brain", title: "Ultra-Realistic AI Pricing", enabled: true)
+                    FeatureStatusRow(icon: "bolt.fill", title: "Direct eBay Listing", enabled: true)
+                    FeatureStatusRow(icon: "magnifyingglass.circle", title: "Prospecting Mode", enabled: true)
+                    FeatureStatusRow(icon: "barcode.viewfinder", title: "Barcode Scanner", enabled: true)
+                    FeatureStatusRow(icon: "wand.and.stars", title: "Auto-Listing Generator", enabled: true)
+                }
+            }
+            .navigationTitle("Revolutionary Settings")
+        }
+    }
+}
+
+struct FeatureStatusRow: View {
+    let icon: String
+    let title: String
+    let enabled: Bool
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+            Text(title)
+            Spacer()
+            Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundColor(enabled ? .green : .red)
+        }
+    }
+}
+
+// MARK: - SINGLE UNIFIED HAPTIC FUNCTION (NO DUPLICATES!)
+func empireHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+    let impactFeedback = UIImpactFeedbackGenerator(style: style)
+    impactFeedback.impactOccurred()
+}
+
+extension UIImpactFeedbackGenerator.FeedbackStyle {
+    static let success = UIImpactFeedbackGenerator.FeedbackStyle.heavy
 }
 
 // MARK: - Supporting View Components

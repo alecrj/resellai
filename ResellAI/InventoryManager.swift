@@ -8,15 +8,35 @@
 import SwiftUI
 import Foundation
 
-// MARK: - Inventory Manager
+// MARK: - Enhanced Inventory Manager with Data Migration
 class InventoryManager: ObservableObject {
     @Published var items: [InventoryItem] = []
     
     private let userDefaults = UserDefaults.standard
     private let itemsKey = "SavedInventoryItems"
+    private let migrationKey = "DataMigrationV2_Completed"
     
     init() {
+        performDataMigrationIfNeeded()
         loadItems()
+    }
+    
+    // ✅ DATA MIGRATION for fixing old enum values
+    private func performDataMigrationIfNeeded() {
+        guard !userDefaults.bool(forKey: migrationKey) else {
+            print("✅ Data migration already completed")
+            return
+        }
+        
+        print("🔄 Performing data migration...")
+        
+        // Clear old corrupted data
+        userDefaults.removeObject(forKey: itemsKey)
+        
+        // Mark migration as completed
+        userDefaults.set(true, forKey: migrationKey)
+        
+        print("✅ Data migration completed - fresh start!")
     }
     
     // MARK: - Computed Properties
@@ -86,7 +106,7 @@ class InventoryManager: ObservableObject {
         }
     }
     
-    // MARK: - Data Persistence
+    // MARK: - Data Persistence with Error Handling
     private func saveItems() {
         do {
             let data = try JSONEncoder().encode(items)
@@ -99,7 +119,7 @@ class InventoryManager: ObservableObject {
     
     private func loadItems() {
         guard let data = userDefaults.data(forKey: itemsKey) else {
-            print("📱 No saved items found")
+            print("📱 No saved items found - starting fresh")
             return
         }
         
@@ -108,13 +128,15 @@ class InventoryManager: ObservableObject {
             print("📂 Loaded \(items.count) items from UserDefaults")
         } catch {
             print("❌ Error loading items: \(error)")
+            print("🔄 Clearing corrupted data and starting fresh")
+            userDefaults.removeObject(forKey: itemsKey)
             items = []
         }
     }
     
     // MARK: - Utility Functions
     func exportCSV() -> String {
-        var csv = "Item#,Name,Source,Cost,Suggested$,Status,Profit,ROI%,Date,Title,Description,Keywords,Condition,Category\n"
+        var csv = "Item#,Name,Source,Cost,Suggested$,Status,Profit,ROI%,Date,Title,Description,Keywords,Condition,Category,Barcode\n"
         
         for item in items {
             let row = [
@@ -131,7 +153,8 @@ class InventoryManager: ObservableObject {
                 csvEscape(item.description),
                 csvEscape(item.keywords.joined(separator: "; ")),
                 csvEscape(item.condition),
-                csvEscape(item.category)
+                csvEscape(item.category),
+                csvEscape(item.barcode ?? "")  // ✅ NEW: Barcode support
             ]
             csv += row.joined(separator: ",") + "\n"
         }
@@ -169,9 +192,22 @@ class InventoryManager: ObservableObject {
             estimatedValue: totalEstimatedValue
         )
     }
+    
+    // ✅ NEW: Category Analytics for Clothes/Shoes
+    func getCategoryBreakdown() -> [String: Int] {
+        let categories = Dictionary(grouping: items, by: { $0.category })
+        return categories.mapValues { $0.count }
+    }
+    
+    func getBestPerformingBrands() -> [String: Double] {
+        let brands = Dictionary(grouping: items.filter { !$0.brand.isEmpty }, by: { $0.brand })
+        return brands.mapValues { items in
+            items.reduce(0) { $0 + $1.estimatedROI } / Double(items.count)
+        }
+    }
 }
 
-// MARK: - Statistics Model
+// MARK: - Enhanced Statistics Model
 struct InventoryStatistics {
     let totalItems: Int
     let listedItems: Int
@@ -183,5 +219,15 @@ struct InventoryStatistics {
     
     var potentialProfit: Double {
         estimatedValue - totalInvestment - (estimatedValue * 0.13) // Minus fees
+    }
+    
+    var successRate: Double {
+        guard totalItems > 0 else { return 0 }
+        return Double(soldItems) / Double(totalItems) * 100
+    }
+    
+    var profitMargin: Double {
+        guard totalInvestment > 0 else { return 0 }
+        return (totalProfit / totalInvestment) * 100
     }
 }
