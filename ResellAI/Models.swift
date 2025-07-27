@@ -2,10 +2,11 @@
 import SwiftUI
 import Foundation
 
-// MARK: - Enhanced Core Models
+// MARK: - Enhanced Core Models with Smart Inventory System
 struct InventoryItem: Identifiable, Codable {
     let id = UUID()
     var itemNumber: Int
+    var inventoryCode: String = "" // 🆕 Smart inventory code (e.g., "A-001", "B-023")
     var name: String
     var category: String
     var purchasePrice: Double
@@ -43,6 +44,12 @@ struct InventoryItem: Identifiable, Codable {
     var subcategory: String = ""
     var authenticationNotes: String = ""
     
+    // ✅ NEW: Physical inventory management
+    var storageLocation: String = "" // Where it's physically stored
+    var binNumber: String = ""       // Specific bin/box number
+    var isPackaged: Bool = false     // Ready for shipping
+    var packagedDate: Date?          // When it was packaged
+    
     // Initialize with comprehensive defaults
     init(itemNumber: Int, name: String, category: String, purchasePrice: Double,
          suggestedPrice: Double, source: String, condition: String, title: String,
@@ -55,8 +62,10 @@ struct InventoryItem: Identifiable, Codable {
          listingStrategy: String? = nil, sourcingTips: [String]? = nil,
          barcode: String? = nil, brand: String = "", size: String = "",
          colorway: String = "", releaseYear: String = "", subcategory: String = "",
-         authenticationNotes: String = "") {
+         authenticationNotes: String = "", inventoryCode: String = "",
+         storageLocation: String = "", binNumber: String = "") {
         self.itemNumber = itemNumber
+        self.inventoryCode = inventoryCode
         self.name = name
         self.category = category
         self.purchasePrice = purchasePrice
@@ -89,6 +98,8 @@ struct InventoryItem: Identifiable, Codable {
         self.releaseYear = releaseYear
         self.subcategory = subcategory
         self.authenticationNotes = authenticationNotes
+        self.storageLocation = storageLocation
+        self.binNumber = binNumber
     }
     
     var profit: Double {
